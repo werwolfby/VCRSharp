@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCRSharp", "VCRSharp\VCRSharp.csproj", "{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCRSharp.Tests", "VCRSharp.Tests\VCRSharp.Tests.csproj", "{66F44963-2EDE-40AE-A3FF-BE38B170AF32}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66F44963-2EDE-40AE-A3FF-BE38B170AF32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66F44963-2EDE-40AE-A3FF-BE38B170AF32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66F44963-2EDE-40AE-A3FF-BE38B170AF32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66F44963-2EDE-40AE-A3FF-BE38B170AF32}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

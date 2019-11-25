@@ -1,0 +1,13 @@
+﻿Request:
+  Method: GET
+  Uri: http://localhost:8080/test
+  Headers:
+  - Content-Type: text
+  - Cookie: [value=1, value=2]
+Response:
+  Version: 1.1
+  StatusCode: 200
+  StatusMessage: OK
+  Headers:
+  - Content-Type: application/json
+  Body: '{"a": 1, "b": 2}'
