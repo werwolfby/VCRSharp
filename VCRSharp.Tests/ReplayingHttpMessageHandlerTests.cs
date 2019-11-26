@@ -63,6 +63,156 @@ namespace VCRSharp.Tests
             Assert.That(response.Headers.GetValues("Server"), Is.EqualTo(new[] {record.Response.Headers["Server"]}));
         }
         
+        [Test]
+        public async Task SendAsync_PostRequest_Success()
+        {
+            var cassette = new Cassette();
+            var record = new CassetteRecord
+            {
+                Request = new CassetteRecordRequest
+                {
+                    Method = HttpMethod.Post.Method,
+                    Uri = new Uri("http://localhost:8080/test"),
+                    Headers = new NameValueCollection
+                    {
+                        {"Cookie", "value=1"},
+                    },
+                    Body = "{}"
+                },
+                Response = new CassetteRecordResponse
+                {
+                    Version = new Version(1, 1),
+                    StatusCode = 200,
+                    StatusMessage = "OK",
+                    Headers = new NameValueCollection
+                    {
+                        {"Server", "Test"},
+                    },
+                    Body = @"{""a"": 1, ""b"": 2}",
+                },
+            };
+            cassette.Add(record);
+            
+            var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                Headers =
+                {
+                    {"Cookie", "value=1"},
+                },
+                Version = new Version(1, 1),
+                RequestUri = new Uri("http://localhost:8080/test"),
+                Content = new StringContent("{}"),
+            };
+            var response = await replayingHttpMessageHandler.SendAsync(request, CancellationToken.None);
+            
+            Assert.That(response, Is.Not.Null);
+            Assert.That(response.Version, Is.EqualTo(record.Response.Version));
+            Assert.That(response.StatusCode, Is.EqualTo((HttpStatusCode) record.Response.StatusCode));
+            Assert.That(response.ReasonPhrase, Is.EqualTo(record.Response.StatusMessage));
+            Assert.That(response.RequestMessage, Is.Not.Null);
+            Assert.That(response.Headers.GetValues("Server"), Is.EqualTo(new[] {record.Response.Headers["Server"]}));
+        }
+        
+        [Test]
+        public void SendAsync_NotFoundRequest_ThrowsArgumentException()
+        {
+            var cassette = new Cassette();
+            var record = new CassetteRecord
+            {
+                Request = new CassetteRecordRequest
+                {
+                    Method = HttpMethod.Get.Method,
+                    Uri = new Uri("http://localhost:8080/test"),
+                    Headers = new NameValueCollection
+                    {
+                        {"Cookie", "value=1"},
+                    },
+                    Body = null
+                },
+                Response = new CassetteRecordResponse
+                {
+                    Version = new Version(1, 1),
+                    StatusCode = 200,
+                    StatusMessage = "OK",
+                    Headers = new NameValueCollection
+                    {
+                        {"Server", "Test"},
+                    },
+                    Body = @"{""a"": 1, ""b"": 2}",
+                },
+            };
+            cassette.Add(record);
+            
+            var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                Headers =
+                {
+                    {"Cookie", "value=1"},
+                },
+                Version = new Version(1, 1),
+                RequestUri = new Uri("http://localhost:8080/test1"),
+                Content = null,
+            };
+            var argumentException = Assert.ThrowsAsync<ArgumentException>(() => replayingHttpMessageHandler.SendAsync(request, CancellationToken.None));
+            
+            Assert.That(argumentException.ParamName, Is.EqualTo("request"));
+        }
+        
+        [Test]
+        public void SendAsync_WrongResponseHeader_ThrowsArgumentException()
+        {
+            var cassette = new Cassette();
+            var record = new CassetteRecord
+            {
+                Request = new CassetteRecordRequest
+                {
+                    Method = HttpMethod.Get.Method,
+                    Uri = new Uri("http://localhost:8080/test"),
+                    Headers = new NameValueCollection
+                    {
+                        {"Cookie", "value=1"},
+                    },
+                    Body = null
+                },
+                Response = new CassetteRecordResponse
+                {
+                    Version = new Version(1, 1),
+                    StatusCode = 200,
+                    StatusMessage = "OK",
+                    Headers = new NameValueCollection
+                    {
+                        {"Server", "Test"},
+                        {"Content-Type", "application/json"},
+                    },
+                    Body = @"{""a"": 1, ""b"": 2}",
+                },
+            };
+            cassette.Add(record);
+            
+            var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                Headers =
+                {
+                    {"Cookie", "value=1"},
+                },
+                Version = new Version(1, 1),
+                RequestUri = new Uri("http://localhost:8080/test"),
+                Content = null,
+            };
+            var argumentException = Assert.ThrowsAsync<ArgumentException>(() => replayingHttpMessageHandler.SendAsync(request, CancellationToken.None));
+            
+            Assert.That(argumentException.ParamName, Is.Null);
+        }
+        
         private class PublicReplayingHttpMessageHandler : ReplayingHttpMessageHandler
         {
             public PublicReplayingHttpMessageHandler(Cassette cassette) : base(cassette)
