@@ -4,7 +4,9 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net.Http;
 using NUnit.Framework;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
+using Version = System.Version;
 
 namespace VCRSharp.Tests
 {
@@ -216,6 +218,13 @@ namespace VCRSharp.Tests
                 Assert.That(record.Response.Headers, Has.Count.EqualTo(1));
                 Assert.That(record.Response.Headers["Content-Type"], Is.EqualTo("application/json"));
             }
+        }
+
+        [Test]
+        public void Load_WrongHeadersFormat_ThrowsException()
+        {
+            var yamlCassetteStorage = new YamlCassetteStorage();
+            Assert.Throws<YamlException>(() => yamlCassetteStorage.Load("cassette/Test3.yml"));
         }
     }
 }

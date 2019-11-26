@@ -67,10 +67,6 @@ namespace VCRSharp
                 parser.Consume<DocumentEnd>();
             }
             parser.Consume<StreamEnd>();
-            if (parser.MoveNext())
-            {
-                throw new YamlException("Expect end of stream");
-            }
 
             return records;
         }
