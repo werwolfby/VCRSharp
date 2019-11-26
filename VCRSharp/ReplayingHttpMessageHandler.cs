@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -11,13 +10,9 @@ namespace VCRSharp
     public class ReplayingHttpMessageHandler : HttpMessageHandler
     {
         private readonly Cassette _cassette;
-        private readonly IEqualityComparer<CassetteRecordRequest> _comparer;
+        private readonly IEqualityComparer<CassetteRecordRequest>? _comparer;
 
-        public ReplayingHttpMessageHandler(Cassette cassette) : this(cassette, new CassetteRecordRequestMethodUriEqualityComparer())
-        {
-        }
-
-        public ReplayingHttpMessageHandler(Cassette cassette, IEqualityComparer<CassetteRecordRequest> comparer)
+        public ReplayingHttpMessageHandler(Cassette cassette, IEqualityComparer<CassetteRecordRequest> comparer = null)
         {
             _cassette = cassette;
             _comparer = comparer;
@@ -32,7 +27,7 @@ namespace VCRSharp
                 request.Content = new StringContent(newRecord.Body);
             }
 
-            var record = _cassette.Records.FirstOrDefault(r => _comparer.Equals(r.Request, newRecord));
+            var record = _cassette.Find(newRecord, _comparer);
             if (record == null)
             {
                 throw new ArgumentException("Can't find request in cassette", nameof(request));
