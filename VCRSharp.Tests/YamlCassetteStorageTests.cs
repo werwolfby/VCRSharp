@@ -8,13 +8,12 @@ using YamlDotNet.RepresentationModel;
 
 namespace VCRSharp.Tests
 {
-    public class CassetteTests
+    public class YamlCassetteStorageTests
     {
         [Test]
         public void Save_SingleRecord_Success()
         {
             var path = "cassette/WriteTest1.yml";
-            var cassette = new Cassette(path);
             var record = new CassetteRecord
             {
                 Request = new CassetteRecordRequest
@@ -41,8 +40,8 @@ namespace VCRSharp.Tests
                     Body = @"{""a"": 1, ""b"": 2}",
                 }
             };
-            cassette.Add(record);
-            cassette.Save();
+            var yamlCassetteStorage = new YamlCassetteStorage();
+            yamlCassetteStorage.Save(path, new[] {record});
 
             var yamlStream = new YamlStream();
             yamlStream.Load(new StringReader(File.ReadAllText(path)));
@@ -88,7 +87,6 @@ namespace VCRSharp.Tests
         public void Save_TwoRecord_Success()
         {
             var path = "cassette/WriteTest2.yml";
-            var cassette = new Cassette(path);
             var record = new CassetteRecord
             {
                 Request = new CassetteRecordRequest
@@ -115,9 +113,8 @@ namespace VCRSharp.Tests
                     Body = @"{""a"": 1, ""b"": 2}",
                 }
             };
-            cassette.Add(record);
-            cassette.Add(record);
-            cassette.Save();
+            var yamlCassetteStorage = new YamlCassetteStorage();
+            yamlCassetteStorage.Save(path, new[] {record, record});
 
             var yamlStream = new YamlStream();
             yamlStream.Load(new StringReader(File.ReadAllText(path)));
@@ -167,12 +164,12 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_SingleRecord_Success()
         {
-            var cassette = new Cassette("cassette/Test1.yml");
-            cassette.Load();
+            var cassette = new YamlCassetteStorage();
+            var records = cassette.Load("cassette/Test1.yml");
             
-            Assert.That(cassette.Records, Has.Count.EqualTo(1));
+            Assert.That(records, Has.Count.EqualTo(1));
             
-            var record = cassette.Records[0];
+            var record = records[0];
             Assert.That(record.Request.Method, Is.EqualTo(HttpMethod.Get.Method));
             Assert.That(record.Request.Uri, Is.EqualTo(new Uri("http://localhost:8080/test")));
             Assert.That(record.Request.Body, Is.Null);
@@ -193,13 +190,13 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_TwoRecord_Success()
         {
-            var cassette = new Cassette("cassette/Test2.yml");
-            cassette.Load();
+            var yamlCassetteStorage = new YamlCassetteStorage();
+            var records = yamlCassetteStorage.Load("cassette/Test2.yml");
             
-            Assert.That(cassette.Records, Has.Count.EqualTo(2));
+            Assert.That(records, Has.Count.EqualTo(2));
 
-            AssetRecord(cassette.Records[0]);
-            AssetRecord(cassette.Records[1]);
+            AssetRecord(records[0]);
+            AssetRecord(records[1]);
 
             static void AssetRecord(CassetteRecord record)
             {

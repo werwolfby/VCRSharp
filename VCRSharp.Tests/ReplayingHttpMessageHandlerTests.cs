@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -14,7 +13,7 @@ namespace VCRSharp.Tests
         [Test]
         public async Task SendAsync_GetRequest_Success()
         {
-            var cassette = new Cassette(".");
+            var cassette = new Cassette();
             var record = new CassetteRecord
             {
                 Request = new CassetteRecordRequest
