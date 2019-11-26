@@ -11,7 +11,7 @@ using Version = System.Version;
 
 namespace VCRSharp
 {
-    public class YamlCassetteStorage
+    public class YamlCassetteStorage : ICassetteStorage
     {
         private readonly IValueSerializer _serializer;
         private readonly IValueDeserializer _deserializer;
@@ -37,12 +37,9 @@ namespace VCRSharp
             _deserializer = deserializerBuilder.BuildValueDeserializer();
         }
 
-        public void Save(string path, IEnumerable<CassetteRecord> records)
+        public void Save(TextWriter textWriter, IEnumerable<CassetteRecord> records)
         {
-            Directory.CreateDirectory(new FileInfo(path).Directory?.FullName);
-            
-            using var stream = new StreamWriter(path, false, Encoding.UTF8);
-            var emiter = new Emitter(stream);
+            var emiter = new Emitter(textWriter);
             emiter.Emit(new StreamStart());
             foreach (var record in records)
             {
@@ -53,11 +50,10 @@ namespace VCRSharp
             emiter.Emit(new StreamEnd());
         }
 
-        public IReadOnlyList<CassetteRecord> Load(string path)
+        public IReadOnlyList<CassetteRecord> Load(TextReader textReader)
         {
-            using var stream = new StreamReader(path, Encoding.UTF8);
             var records = new List<CassetteRecord>();
-            var parser = new Parser(stream);
+            var parser = new Parser(textReader);
             parser.Consume<StreamStart>();
             while (!(parser.Current is StreamEnd))
             {

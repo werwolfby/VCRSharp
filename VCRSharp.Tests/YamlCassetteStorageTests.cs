@@ -42,7 +42,7 @@ namespace VCRSharp.Tests
                     Body = @"{""a"": 1, ""b"": 2}",
                 }
             };
-            var yamlCassetteStorage = new YamlCassetteStorage();
+            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
             yamlCassetteStorage.Save(path, new[] {record});
 
             var yamlStream = new YamlStream();
@@ -115,7 +115,7 @@ namespace VCRSharp.Tests
                     Body = @"{""a"": 1, ""b"": 2}",
                 }
             };
-            var yamlCassetteStorage = new YamlCassetteStorage();
+            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
             yamlCassetteStorage.Save(path, new[] {record, record});
 
             var yamlStream = new YamlStream();
@@ -166,7 +166,7 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_SingleRecord_Success()
         {
-            var cassette = new YamlCassetteStorage();
+            ICassetteStorage cassette = new YamlCassetteStorage();
             var records = cassette.Load("cassette/Test1.yml");
             
             Assert.That(records, Has.Count.EqualTo(1));
@@ -192,7 +192,7 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_TwoRecord_Success()
         {
-            var yamlCassetteStorage = new YamlCassetteStorage();
+            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
             var records = yamlCassetteStorage.Load("cassette/Test2.yml");
             
             Assert.That(records, Has.Count.EqualTo(2));
@@ -223,7 +223,7 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_WrongHeadersFormat_ThrowsException()
         {
-            var yamlCassetteStorage = new YamlCassetteStorage();
+            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
             Assert.Throws<YamlException>(() => yamlCassetteStorage.Load("cassette/Test3.yml"));
         }
     }
