@@ -6,53 +6,64 @@ namespace VCRSharp
 {
     public class CassetteRecord
     {
-        public CassetteRecordRequest Request { get; set; }
+        public CassetteRecord(CassetteRecordRequest request, CassetteRecordResponse response)
+        {
+            Request = request;
+            Response = response;
+        }
+
+        public CassetteRecordRequest Request { get; }
         
-        public CassetteRecordResponse Response { get; set; }
+        public CassetteRecordResponse Response { get; }
     }
 
     public class CassetteRecordRequest
     {
-        public string Method { get; set; }
+        public CassetteRecordRequest(string method, Uri uri, NameValueCollection headers, string? body = null)
+        {
+            Method = method;
+            Uri = uri;
+            Headers = headers;
+            Body = body;
+        }
+
+        public string Method { get; }
         
-        public Uri Uri { get; set; }
+        public Uri Uri { get; }
         
-        public NameValueCollection Headers { get; set; }
+        public NameValueCollection Headers { get; }
         
-        public string Body { get; set; }
+        public string? Body { get; set; }
 
         public static CassetteRecordRequest NewFromRequest(HttpRequestMessage request)
         {
-            return new CassetteRecordRequest
-            {
-                Method = request.Method.Method,
-                Uri = request.RequestUri,
-                Headers = request.Headers.ToNameValueCollection(),
-            };
+            return new CassetteRecordRequest(request.Method.Method, request.RequestUri,
+                request.Headers.ToNameValueCollection());
         }
     }
 
     public class CassetteRecordResponse
     {
-        public Version Version { get; set; }
+        public CassetteRecordResponse(Version version, int statusCode, string statusMessage, NameValueCollection headers, string? body = null)
+        {
+            Version = version;
+            StatusCode = statusCode;
+            StatusMessage = statusMessage;
+            Headers = headers;
+            Body = body;
+        }
+
+        public Version Version { get; }
         
-        public int StatusCode { get; set; }
+        public int StatusCode { get; }
         
-        public string StatusMessage { get; set; }
+        public string StatusMessage { get; }
         
-        public NameValueCollection Headers { get; set; }
+        public NameValueCollection Headers { get; }
         
-        public string Body { get; set; }
+        public string? Body { get; set; }
 
         public static CassetteRecordResponse NewFromResponse(HttpResponseMessage response)
-        {
-            return new CassetteRecordResponse
-            {
-                StatusCode = (int) response.StatusCode,
-                StatusMessage = response.ReasonPhrase,
-                Version = response.Version,
-                Headers = response.Headers.ToNameValueCollection(),
-            };
-        }
+            => new CassetteRecordResponse(response.Version, (int) response.StatusCode, response.ReasonPhrase, response.Headers.ToNameValueCollection());
     }
 }

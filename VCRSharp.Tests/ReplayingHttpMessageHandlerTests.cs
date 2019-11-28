@@ -14,30 +14,23 @@ namespace VCRSharp.Tests
         public async Task SendAsync_GetRequest_Success()
         {
             var cassette = new Cassette();
-            var record = new CassetteRecord
-            {
-                Request = new CassetteRecordRequest
-                {
-                    Method = HttpMethod.Get.Method,
-                    Uri = new Uri("http://localhost:8080/test"),
-                    Headers = new NameValueCollection
+            var record = new CassetteRecord(
+                new CassetteRecordRequest(
+                    HttpMethod.Get.Method,
+                    new Uri("http://localhost:8080/test"),
+                    new NameValueCollection
                     {
                         {"Cookie", "value=1"},
-                    },
-                    Body = null
-                },
-                Response = new CassetteRecordResponse
-                {
-                    Version = new Version(1, 1),
-                    StatusCode = 200,
-                    StatusMessage = "OK",
-                    Headers = new NameValueCollection
+                    }),
+                new CassetteRecordResponse(
+                    new Version(1, 1),
+                    200,
+                    "OK",
+                    new NameValueCollection
                     {
                         {"Server", "Test"},
                     },
-                    Body = @"{""a"": 1, ""b"": 2}",
-                },
-            };
+                    @"{""a"": 1, ""b"": 2}"));
             cassette.Add(record);
             
             var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);
@@ -67,37 +60,31 @@ namespace VCRSharp.Tests
         public async Task SendAsync_PostRequest_Success()
         {
             var cassette = new Cassette();
-            var record = new CassetteRecord
-            {
-                Request = new CassetteRecordRequest
-                {
-                    Method = HttpMethod.Post.Method,
-                    Uri = new Uri("http://localhost:8080/test"),
-                    Headers = new NameValueCollection
+            var record = new CassetteRecord(
+                new CassetteRecordRequest(
+                    HttpMethod.Post.Method,
+                    new Uri("http://localhost:8080/test"),
+                    new NameValueCollection
                     {
                         {"Cookie", "value=1"},
                     },
-                    Body = "{}"
-                },
-                Response = new CassetteRecordResponse
-                {
-                    Version = new Version(1, 1),
-                    StatusCode = 200,
-                    StatusMessage = "OK",
-                    Headers = new NameValueCollection
+                    "{}"),
+                new CassetteRecordResponse(
+                    new Version(1, 1),
+                    200,
+                    "OK",
+                    new NameValueCollection
                     {
                         {"Server", "Test"},
                     },
-                    Body = @"{""a"": 1, ""b"": 2}",
-                },
-            };
+                    @"{""a"": 1, ""b"": 2}"));
             cassette.Add(record);
             
             var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);
 
             var request = new HttpRequestMessage
             {
-                Method = HttpMethod.Post,
+                Method =HttpMethod.Post,
                 Headers =
                 {
                     {"Cookie", "value=1"},
@@ -120,30 +107,23 @@ namespace VCRSharp.Tests
         public void SendAsync_NotFoundRequest_ThrowsArgumentException()
         {
             var cassette = new Cassette();
-            var record = new CassetteRecord
-            {
-                Request = new CassetteRecordRequest
-                {
-                    Method = HttpMethod.Get.Method,
-                    Uri = new Uri("http://localhost:8080/test"),
-                    Headers = new NameValueCollection
+            var record = new CassetteRecord(
+                new CassetteRecordRequest(
+                    HttpMethod.Get.Method,
+                    new Uri("http://localhost:8080/test"),
+                    new NameValueCollection
                     {
                         {"Cookie", "value=1"},
-                    },
-                    Body = null
-                },
-                Response = new CassetteRecordResponse
-                {
-                    Version = new Version(1, 1),
-                    StatusCode = 200,
-                    StatusMessage = "OK",
-                    Headers = new NameValueCollection
+                    }),
+                new CassetteRecordResponse(
+                    new Version(1, 1),
+                    200,
+                    "OK",
+                    new NameValueCollection
                     {
                         {"Server", "Test"},
                     },
-                    Body = @"{""a"": 1, ""b"": 2}",
-                },
-            };
+                    @"{""a"": 1, ""b"": 2}"));
             cassette.Add(record);
             
             var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);
@@ -168,31 +148,24 @@ namespace VCRSharp.Tests
         public void SendAsync_WrongResponseHeader_ThrowsArgumentException()
         {
             var cassette = new Cassette();
-            var record = new CassetteRecord
-            {
-                Request = new CassetteRecordRequest
-                {
-                    Method = HttpMethod.Get.Method,
-                    Uri = new Uri("http://localhost:8080/test"),
-                    Headers = new NameValueCollection
+            var record = new CassetteRecord(
+                new CassetteRecordRequest(
+                    HttpMethod.Get.Method,
+                    new Uri("http://localhost:8080/test"),
+                    new NameValueCollection
                     {
                         {"Cookie", "value=1"},
-                    },
-                    Body = null
-                },
-                Response = new CassetteRecordResponse
-                {
-                    Version = new Version(1, 1),
-                    StatusCode = 200,
-                    StatusMessage = "OK",
-                    Headers = new NameValueCollection
+                    }),
+                new CassetteRecordResponse(
+                    new Version(1, 1),
+                    200,
+                    "OK",
+                    new NameValueCollection
                     {
                         {"Server", "Test"},
                         {"Content-Type", "application/json"},
                     },
-                    Body = @"{""a"": 1, ""b"": 2}",
-                },
-            };
+                    @"{""a"": 1, ""b"": 2}"));
             cassette.Add(record);
             
             var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);

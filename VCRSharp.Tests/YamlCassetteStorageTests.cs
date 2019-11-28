@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net.Http;
 using NUnit.Framework;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-using Version = System.Version;
+using Version=System.Version;
 
 namespace VCRSharp.Tests
 {
@@ -15,33 +14,26 @@ namespace VCRSharp.Tests
         [Test]
         public void Save_SingleRecord_Success()
         {
-            var path = "cassette/WriteTest1.yml";
-            var record = new CassetteRecord
-            {
-                Request = new CassetteRecordRequest
-                {
-                    Method = HttpMethod.Get.Method,
-                    Uri = new Uri("http://localhost:8080/test"),
-                    Headers = new NameValueCollection
+            const string path = "cassette/WriteTest1.yml";
+            var record = new CassetteRecord(
+                new CassetteRecordRequest(
+                    HttpMethod.Get.Method,
+                    new Uri("http://localhost:8080/test"),
+                    new NameValueCollection
                     {
                         {"Content-Type", "text"},
                         {"Cookie", "value=1"},
                         {"Cookie", "value=2"},
-                    },
-                    Body = null,
-                },
-                Response = new CassetteRecordResponse
-                {
-                    Version = new Version(1, 1),
-                    StatusCode = 200,
-                    StatusMessage = "OK",
-                    Headers = new NameValueCollection
+                    }),
+                new CassetteRecordResponse(
+                    new Version(1, 1), 
+                    200,
+                    "OK",
+                    new NameValueCollection
                     {
                         {"Content-Type", "application/json"}
                     },
-                    Body = @"{""a"": 1, ""b"": 2}",
-                }
-            };
+                     @"{""a"": 1, ""b"": 2}"));
             ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
             yamlCassetteStorage.Save(path, new[] {record});
 
@@ -89,32 +81,25 @@ namespace VCRSharp.Tests
         public void Save_TwoRecord_Success()
         {
             var path = "cassette/WriteTest2.yml";
-            var record = new CassetteRecord
-            {
-                Request = new CassetteRecordRequest
-                {
-                    Method = HttpMethod.Get.Method,
-                    Uri = new Uri("http://localhost:8080/test"),
-                    Headers = new NameValueCollection
+            var record = new CassetteRecord(
+                new CassetteRecordRequest(
+                    HttpMethod.Get.Method,
+                    new Uri("http://localhost:8080/test"),
+                    new NameValueCollection
                     {
                         {"Content-Type", "text"},
                         {"Cookie", "value=1"},
                         {"Cookie", "value=2"},
-                    },
-                    Body = null,
-                },
-                Response = new CassetteRecordResponse
-                {
-                    Version = new Version(1, 1),
-                    StatusCode = 200,
-                    StatusMessage = "OK",
-                    Headers = new NameValueCollection
+                    }),
+                new CassetteRecordResponse(
+                    new Version(1, 1),
+                    200,
+                    "OK",
+                    new NameValueCollection
                     {
                         {"Content-Type", "application/json"}
                     },
-                    Body = @"{""a"": 1, ""b"": 2}",
-                }
-            };
+                     @"{""a"": 1, ""b"": 2}"));
             ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
             yamlCassetteStorage.Save(path, new[] {record, record});
 

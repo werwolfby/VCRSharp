@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
@@ -32,7 +35,10 @@ namespace VCRSharp
             var deserializerBuilder = new DeserializerBuilder()
                 .WithTypeConverter(versionYamlTypeConverter)
                 .WithTypeConverter(nameValueCollectionYamlTypeConverter)
-                .WithTypeConverter(uriYamlTypeConverter);
+                .WithTypeConverter(uriYamlTypeConverter)
+                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecord>(), r => r.OnTop())
+                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordRequest>(), r => r.OnTop())
+                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordResponse>(), r => r.OnTop());
             _deserializer = deserializerBuilder.BuildValueDeserializer();
         }
 
@@ -166,6 +172,52 @@ namespace VCRSharp
                     emitter.Emit(new MappingEnd());
                 }
                 emitter.Emit(new SequenceEnd());
+            }
+        }
+        
+        private class ConstructorNodeDeserializer<T> : INodeDeserializer
+        {
+            public bool Deserialize(IParser parser, Type expectedType, Func<IParser, Type, object?> nestedObjectDeserializer, out object? value)
+            {
+                if (expectedType != typeof(T) || !parser.TryConsume(out MappingStart _))
+                {
+                    value = null;
+                    return false;
+                }
+
+                var constructor = expectedType.GetConstructors().Single();
+                var parameters = constructor.GetParameters();
+                var expectedParameters = parameters
+                    .ToDictionary(
+                        p => p.Name,
+                        p => (type: p.ParameterType, hasDefault: (p.Attributes & ParameterAttributes.HasDefault) != 0, value: (object?)null),
+                        StringComparer.OrdinalIgnoreCase);
+                while (!parser.TryConsume(out MappingEnd _))
+                {
+                    var scalar = parser.Consume<Scalar>();
+                    if (!expectedParameters.TryGetValue(scalar.Value, out var expectedParameterDescription))
+                    {
+                        throw new YamlException($"{scalar.Value} parameter not found for type `{expectedType.Name}`");
+                    }
+
+                    if (expectedParameterDescription.value != null)
+                    {
+                        throw new YamlException($"{scalar.Value} parameter specified multiple times for type `{expectedType.Name}`");
+                    }
+
+                    var parameterValue = nestedObjectDeserializer(parser, expectedParameterDescription.type);
+                    expectedParameters[scalar.Value] = (expectedParameterDescription.type, expectedParameterDescription.hasDefault, parameterValue);
+                }
+
+                if (expectedParameters.Any(kv => kv.Value.value == null && !kv.Value.hasDefault))
+                {
+                    var emptyParameters = expectedParameters.Where(p => p.Value.value == null && !p.Value.hasDefault).Select(p => p.Key);
+                    throw new YamlException($"Required parameters `{string.Join(", ", emptyParameters)}` is not specified");
+                }
+
+                var parameterValues = parameters.Select(p => expectedParameters.TryGetValue(p.Name, out var parameterValue) ? parameterValue.value : null).ToArray();
+                value = constructor.Invoke(parameterValues);
+                return true;
             }
         }
     }

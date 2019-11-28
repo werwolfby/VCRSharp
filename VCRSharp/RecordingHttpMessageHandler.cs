@@ -15,24 +15,23 @@ namespace VCRSharp
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var record = new CassetteRecord();
-            
-            record.Request = CassetteRecordRequest.NewFromRequest(request);
+            var recordRequest = CassetteRecordRequest.NewFromRequest(request);
             if (request.Content != null)
             {
-                record.Request.Body = await request.Content.ReadAsStringAsync();
-                request.Content = new StringContent(record.Request.Body);
+                recordRequest.Body = await request.Content.ReadAsStringAsync();
+                request.Content = new StringContent(recordRequest.Body);
             }
 
             var response = await base.SendAsync(request, cancellationToken);
             
-            record.Response = CassetteRecordResponse.NewFromResponse(response);
+            var recordResponse = CassetteRecordResponse.NewFromResponse(response);
             if (response.Content != null)
             {
-                record.Response.Body = await response.Content.ReadAsStringAsync();
-                response.Content = new StringContent(record.Response.Body);
+                recordResponse.Body = await response.Content.ReadAsStringAsync();
+                response.Content = new StringContent(recordResponse.Body);
             }
             
+            var record = new CassetteRecord(recordRequest, recordResponse);
             _cassette.Add(record);
 
             return response;

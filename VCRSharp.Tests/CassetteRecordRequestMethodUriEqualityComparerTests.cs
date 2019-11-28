@@ -11,24 +11,20 @@ namespace VCRSharp.Tests
         [Test]
         public void Equal_SameMethodAndUri_Equal()
         {
-            var record1 = new CassetteRecordRequest
-            {
-                Method = HttpMethod.Get.Method,
-                Uri = new Uri("http://localhost:8080/test"),
-                Headers = new NameValueCollection
+            var record1 = new CassetteRecordRequest(
+                HttpMethod.Get.Method,
+                new Uri("http://localhost:8080/test"),
+                new NameValueCollection
                 {
                     {"Header1", "Foo"},
-                },
-            };
-            var record2 = new CassetteRecordRequest
-            {
-                Method = HttpMethod.Get.Method,
-                Uri = new Uri("http://localhost:8080/test"),
-                Headers = new NameValueCollection
+                });
+            var record2 = new CassetteRecordRequest(
+                HttpMethod.Get.Method,
+                new Uri("http://localhost:8080/test"),
+                new NameValueCollection
                 {
                     {"Header2", "Bar"},
-                },
-            };
+                });
 
             var comparer = new CassetteRecordRequestMethodUriEqualityComparer();
             Assert.That(comparer.Equals(record1, record2));
@@ -37,24 +33,20 @@ namespace VCRSharp.Tests
         [Test]
         public void GetHashCode_SameMethodAndUri_Equal()
         {
-            var record1 = new CassetteRecordRequest
-            {
-                Method = HttpMethod.Get.Method,
-                Uri = new Uri("http://localhost:8080/test"),
-                Headers = new NameValueCollection
+            var record1 = new CassetteRecordRequest(
+                HttpMethod.Get.Method,
+                new Uri("http://localhost:8080/test"),
+                new NameValueCollection
                 {
                     {"Header1", "Foo"},
-                },
-            };
-            var record2 = new CassetteRecordRequest
-            {
-                Method = HttpMethod.Get.Method,
-                Uri = new Uri("http://localhost:8080/test"),
-                Headers = new NameValueCollection
+                });
+            var record2 = new CassetteRecordRequest(
+                HttpMethod.Get.Method,
+                new Uri("http://localhost:8080/test"),
+                new NameValueCollection
                 {
                     {"Header2", "Bar"},
-                },
-            };
+                });
 
             var comparer = new CassetteRecordRequestMethodUriEqualityComparer();
             Assert.That(comparer.GetHashCode(record1), Is.EqualTo(comparer.GetHashCode(record2)));
@@ -63,24 +55,20 @@ namespace VCRSharp.Tests
         [Test]
         public void UseInHashSet_True_Success()
         {
-            var record1 = new CassetteRecordRequest
-            {
-                Method = HttpMethod.Get.Method,
-                Uri = new Uri("http://localhost:8080/test"),
-                Headers = new NameValueCollection
+            var record1 = new CassetteRecordRequest(
+                HttpMethod.Get.Method,
+                new Uri("http://localhost:8080/test"),
+                new NameValueCollection
                 {
                     {"Header1", "Foo"},
-                },
-            };
-            var record2 = new CassetteRecordRequest
-            {
-                Method = HttpMethod.Get.Method,
-                Uri = new Uri("http://localhost:8080/test"),
-                Headers = new NameValueCollection
+                });
+            var record2 = new CassetteRecordRequest(
+                HttpMethod.Get.Method,
+                new Uri("http://localhost:8080/test"),
+                new NameValueCollection
                 {
                     {"Header2", "Bar"},
-                },
-            };
+                });
 
             var comparer = new CassetteRecordRequestMethodUriEqualityComparer();
             var hashSet = new HashSet<CassetteRecordRequest>(comparer);
