@@ -211,5 +211,75 @@ namespace VCRSharp.Tests
             ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
             Assert.Throws<YamlException>(() => yamlCassetteStorage.Load("cassette/Test3.yml"));
         }
+
+        [Test]
+        public void Load_NotExistingAttribute_ThrowsException()
+        {
+            const string yaml =
+                "Request:\n" +
+                "  Method: GET\n" +
+                "  Uri: http://localhost:8080/test\n" +
+                "  WrongParameter: 123\n" +
+                "  Headers:\n" +
+                "  - Content-Type: text\n" +
+                "  - Cookie: [value=1, value=2]\n" +
+                "Response:\n" +
+                "  Version: 1.1\n" +
+                "  StatusCode: 200\n" +
+                "  StatusMessage: OK\n" +
+                "  Headers:\n" +
+                "  - Content-Type: application/json\n" +
+                "  Body: '{\"a\": 1, \"b\": 2}'";
+            
+            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
+            var yamlException = Assert.Throws<YamlException>(() => yamlCassetteStorage.Load(new StringReader(yaml)));
+            Assert.That(yamlException.Message, Contains.Substring("WrongParameter"));
+        }
+
+        [Test]
+        public void Load_MissRequiredMethodAttribute_ThrowsException()
+        {
+            const string yaml =
+                "Request:\n" +
+                "  Method: GET\n" +
+                "  Headers:\n" +
+                "  - Content-Type: text\n" +
+                "  - Cookie: [value=1, value=2]\n" +
+                "Response:\n" +
+                "  Version: 1.1\n" +
+                "  StatusCode: 200\n" +
+                "  StatusMessage: OK\n" +
+                "  Headers:\n" +
+                "  - Content-Type: application/json\n" +
+                "  Body: '{\"a\": 1, \"b\": 2}'";
+            
+            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
+            var yamlException = Assert.Throws<YamlException>(() => yamlCassetteStorage.Load(new StringReader(yaml)));
+            Assert.That(yamlException.Message, Contains.Substring("uri"));
+        }
+
+        [Test]
+        public void Load_UriAttributeSpecifiedTwice_ThrowsException()
+        {
+            const string yaml =
+                "Request:\n" +
+                "  Method: GET\n" +
+                "  Uri: http://localhost:8080/test\n" +
+                "  Uri: http://localhost:8080/test\n" +
+                "  Headers:\n" +
+                "  - Content-Type: text\n" +
+                "  - Cookie: [value=1, value=2]\n" +
+                "Response:\n" +
+                "  Version: 1.1\n" +
+                "  StatusCode: 200\n" +
+                "  StatusMessage: OK\n" +
+                "  Headers:\n" +
+                "  - Content-Type: application/json\n" +
+                "  Body: '{\"a\": 1, \"b\": 2}'";
+            
+            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
+            var yamlException = Assert.Throws<YamlException>(() => yamlCassetteStorage.Load(new StringReader(yaml)));
+            Assert.That(yamlException.Message, Contains.Substring("Uri"));
+        }
     }
 }
