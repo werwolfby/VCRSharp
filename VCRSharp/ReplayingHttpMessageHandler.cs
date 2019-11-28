@@ -12,7 +12,7 @@ namespace VCRSharp
         private readonly Cassette _cassette;
         private readonly IEqualityComparer<CassetteRecordRequest>? _comparer;
 
-        public ReplayingHttpMessageHandler(Cassette cassette, IEqualityComparer<CassetteRecordRequest> comparer = null)
+        public ReplayingHttpMessageHandler(Cassette cassette, IEqualityComparer<CassetteRecordRequest>? comparer = null)
         {
             _cassette = cassette;
             _comparer = comparer;
@@ -42,7 +42,7 @@ namespace VCRSharp
                 RequestMessage = request,
                 Content = new StringContent(recordResponse.Body)
             };
-            foreach (string header in recordResponse.Headers)
+            foreach (string? header in recordResponse.Headers)
             {
                 if (!response.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)))
                 {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Text;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
@@ -58,7 +57,8 @@ namespace VCRSharp
             while (!(parser.Current is StreamEnd))
             {
                 parser.Consume<DocumentStart>();
-                var record = (CassetteRecord)_deserializer.DeserializeValue(parser, typeof(CassetteRecord), new SerializerState(), _deserializer);
+                var record = (CassetteRecord)(_deserializer.DeserializeValue(parser, typeof(CassetteRecord), new SerializerState(), _deserializer)
+                    ?? throw new ArgumentException("Can't deserialize CassetteRecord"));
                 records.Add(record);
                 parser.Consume<DocumentEnd>();
             }
@@ -75,8 +75,13 @@ namespace VCRSharp
             public object ReadYaml(IParser parser, Type type)
                 => new Uri(parser.Consume<Scalar>().Value);
 
-            public void WriteYaml(IEmitter emitter, object value, Type type)
-                => emitter.Emit(new Scalar(null, null, ((Uri) value).ToString(), ScalarStyle.Any, true, false));
+            public void WriteYaml(IEmitter emitter, object? value, Type type)
+            {
+                var uri = (Uri)(value ?? throw new ArgumentNullException(nameof(value)));
+                emitter.Emit(new Scalar(null, null,
+                    uri.ToString(), ScalarStyle.Any, true,
+                    false));
+            }
         }
         
         private class VersionYamlTypeConverter : IYamlTypeConverter
@@ -87,8 +92,11 @@ namespace VCRSharp
             public object ReadYaml(IParser parser, Type type)
                 => new Version(parser.Consume<Scalar>().Value);
 
-            public void WriteYaml(IEmitter emitter, object value, Type type)
-                => emitter.Emit(new Scalar(null, null, ((Version) value).ToString(2), ScalarStyle.Any, true, false));
+            public void WriteYaml(IEmitter emitter, object? value, Type type)
+            {
+                var version = (Version) (value ?? throw new ArgumentNullException(nameof(value)));
+                emitter.Emit(new Scalar(null, null, version.ToString(2), ScalarStyle.Any, true, false));
+            }
         }
         
         private class NameValueCollectionYamlTypeConverter : IYamlTypeConverter
@@ -119,7 +127,7 @@ namespace VCRSharp
                     }
                     else
                     {
-                        throw new YamlException($"Expect Scalar or Sequence start, got: {parser.Current.GetType().Name}");
+                        throw new YamlException($"Expect Scalar or Sequence start, got: {parser.Current?.GetType().Name ?? "null"}");
                     }
 
                     parser.Consume<MappingEnd>();
@@ -130,9 +138,9 @@ namespace VCRSharp
                 return nameValueCollection;
             }
 
-            public void WriteYaml(IEmitter emitter, object value, Type type)
+            public void WriteYaml(IEmitter emitter, object? value, Type type)
             {
-                var nameValueCollection = (NameValueCollection) value;
+                var nameValueCollection = (NameValueCollection)(value ?? throw new ArgumentNullException(nameof(value)));
                 
                 emitter.Emit(new SequenceStart(null, null, true, SequenceStyle.Block));
                 for (var i = 0; i < nameValueCollection.Count; i++)
