@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +22,8 @@ namespace VCRSharp.Tests
                 RequestUri = new Uri("http://localhost:8080"),
             };
 
-            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(), cassette);
+            const string body = @"{""a"":1, ""b"": 2}";
+            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StringContent(body, Encoding.UTF8, "application/json")), cassette);
             await handler.SendAsync(request, CancellationToken.None);
             
             Assert.That(cassette.Records, Has.Count.EqualTo(1));
@@ -35,6 +38,7 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
             Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
             Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(body));
         }
         
         [Test]
@@ -48,7 +52,8 @@ namespace VCRSharp.Tests
                 Content = new StringContent("{}"),
             };
 
-            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(), cassette);
+            const string body = @"{""a"":1, ""b"": 2}";
+            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StringContent(body)), cassette);
             await handler.SendAsync(request, CancellationToken.None);
             
             Assert.That(cassette.Records, Has.Count.EqualTo(1));
@@ -63,11 +68,12 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Response.StatusCode, Is.EqualTo(200));
             Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
             Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
-            Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("text/plain").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(body));
         }
         
         [Test]
-        public async Task SendAsync_JsonContentRequest_Success()
+        public async Task SendAsync_PostJsonContentRequest_Success()
         {
             var cassette = new Cassette();
             var request = new HttpRequestMessage
@@ -77,7 +83,8 @@ namespace VCRSharp.Tests
                 Content = new StringContent("{}", Encoding.UTF8, "application/json"),
             };
 
-            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(), cassette);
+            const string body = @"{""a"":1, ""b"": 2}";
+            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StringContent(body, Encoding.UTF8, "application/json")), cassette);
             await handler.SendAsync(request, CancellationToken.None);
             
             Assert.That(cassette.Records, Has.Count.EqualTo(1));
@@ -93,6 +100,7 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
             Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
             Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(body));
         }
         
         private class PublicRecordingHttpMessageHandler : RecordingHttpMessageHandler
@@ -106,6 +114,13 @@ namespace VCRSharp.Tests
         
         private class MockHttpRequestHandler : HttpMessageHandler
         {
+            private readonly HttpContent _content;
+
+            public MockHttpRequestHandler(HttpContent content)
+            {
+                _content = content;
+            }
+
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 await Task.Yield();
@@ -119,7 +134,7 @@ namespace VCRSharp.Tests
                     {
                         {"Server", "Test-Server"}, 
                     },
-                    Content = new StringContent(@"{""a"":1, ""b"": 2}", Encoding.UTF8, "application/json"),
+                    Content = _content,
                 };
             }
         }
