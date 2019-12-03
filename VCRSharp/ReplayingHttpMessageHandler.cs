@@ -17,6 +17,8 @@ namespace VCRSharp
             _cassette = cassette;
             _comparer = comparer;
         }
+        
+        internal Task<HttpResponseMessage> SendAsyncInternal(HttpRequestMessage request, CancellationToken cancellationToken) => SendAsync(request, cancellationToken);
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
