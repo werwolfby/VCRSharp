@@ -26,6 +26,8 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records, Has.Count.EqualTo(1));
             Assert.That(cassette.Records[0].Request.Method, Is.EqualTo(request.Method.Method));
             Assert.That(cassette.Records[0].Request.Uri, Is.EqualTo(request.RequestUri));
+            Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
+            Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
             Assert.That(cassette.Records[0].Request.Body, Is.Null);
             
             Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));
@@ -54,6 +56,7 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Request.Uri, Is.EqualTo(request.RequestUri));
             Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
             Assert.That(cassette.Records[0].Request.Headers["Content-Type"], Contains.Substring("text/plain").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
             Assert.That(cassette.Records[0].Request.Body, Is.EqualTo("{}"));
             
             Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));
@@ -82,6 +85,7 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Request.Uri, Is.EqualTo(request.RequestUri));
             Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
             Assert.That(cassette.Records[0].Request.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
             Assert.That(cassette.Records[0].Request.Body, Is.EqualTo("{}"));
             
             Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));

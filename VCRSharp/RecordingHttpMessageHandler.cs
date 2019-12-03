@@ -1,4 +1,5 @@
 ﻿using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,14 +18,24 @@ namespace VCRSharp
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var recordRequest = CassetteRecordRequest.NewFromRequest(request);
+            string? requestContent = null; 
             if (request.Content != null)
             {
-                recordRequest.Body = await request.Content.ReadAsStringAsync();
-                request.Content = new StringContent(recordRequest.Body);
+                var charSet = request.Content.Headers.ContentType.CharSet;
+                requestContent = await request.Content.ReadAsStringAsync();
+                request.Content = new StringContent(requestContent, Encoding.GetEncoding(charSet), request.Content.Headers.ContentType.MediaType);
             }
 
             var response = await base.SendAsync(request, cancellationToken);
+            
+            var recordRequest = CassetteRecordRequest.NewFromRequest(request);
+            
+            // Host header is required by HTTP 1.1 spec, so we should add it if it is not provided
+            if (recordRequest.Headers["Host"] == null)
+            {
+                recordRequest.Headers.Add("Host", request.RequestUri.IdnHost);
+            }
+            recordRequest.Body = requestContent;
             
             var recordResponse = CassetteRecordResponse.NewFromResponse(response);
             if (response.Content != null)
