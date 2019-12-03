@@ -38,7 +38,7 @@ namespace VCRSharp
         public static CassetteRecordRequest NewFromRequest(HttpRequestMessage request)
         {
             return new CassetteRecordRequest(request.Method.Method, request.RequestUri,
-                request.Headers.ToNameValueCollection());
+                request.ToNameValueCollection());
         }
     }
 
@@ -64,6 +64,6 @@ namespace VCRSharp
         public string? Body { get; set; }
 
         public static CassetteRecordResponse NewFromResponse(HttpResponseMessage response)
-            => new CassetteRecordResponse(response.Version, (int) response.StatusCode, response.ReasonPhrase, response.Headers.ToNameValueCollection());
+            => new CassetteRecordResponse(response.Version, (int) response.StatusCode, response.ReasonPhrase, response.ToNameValueCollection());
     }
 }

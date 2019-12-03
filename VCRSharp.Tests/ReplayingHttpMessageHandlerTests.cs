@@ -29,6 +29,7 @@ namespace VCRSharp.Tests
                     new NameValueCollection
                     {
                         {"Server", "Test"},
+                        {"Content-Type", "application/json"}
                     },
                     @"{""a"": 1, ""b"": 2}"));
             cassette.Add(record);
@@ -163,7 +164,7 @@ namespace VCRSharp.Tests
                     new NameValueCollection
                     {
                         {"Server", "Test"},
-                        {"Content-Type", "application/json"},
+                        {"Is-It-Valid-Header?", "1"},
                     },
                     @"{""a"": 1, ""b"": 2}"));
             cassette.Add(record);

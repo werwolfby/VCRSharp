@@ -46,7 +46,8 @@ namespace VCRSharp
             };
             foreach (string? header in recordResponse.Headers)
             {
-                if (!response.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)))
+                if (!response.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)) &&
+                    !response.Content.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)))
                 {
                     throw new ArgumentException($"Can't add {header} to response");
                 }
