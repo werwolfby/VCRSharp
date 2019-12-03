@@ -16,8 +16,4 @@
       <ProjectReference Include="..\VCRSharp\VCRSharp.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-        <None Update="cassette/*.yml" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-
 </Project>

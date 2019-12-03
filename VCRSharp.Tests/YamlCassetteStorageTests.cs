@@ -14,7 +14,6 @@ namespace VCRSharp.Tests
         [Test]
         public void Save_SingleRecord_Success()
         {
-            const string path = "cassette/WriteTest1.yml";
             var record = new CassetteRecord(
                 new CassetteRecordRequest(
                     HttpMethod.Get.Method,
@@ -34,11 +33,12 @@ namespace VCRSharp.Tests
                         {"Content-Type", "application/json"}
                     },
                      @"{""a"": 1, ""b"": 2}"));
-            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
-            yamlCassetteStorage.Save(path, new[] {record});
+            var yamlCassetteStorage = new YamlCassetteStorage();
+            var stringWriter = new StringWriter();
+            yamlCassetteStorage.Save(stringWriter, new[] {record});
 
             var yamlStream = new YamlStream();
-            yamlStream.Load(new StringReader(File.ReadAllText(path)));
+            yamlStream.Load(new StringReader(stringWriter.GetStringBuilder().ToString()));
             
             Assert.That(yamlStream.Documents, Has.Count.EqualTo(1));
             
@@ -80,7 +80,6 @@ namespace VCRSharp.Tests
         [Test]
         public void Save_TwoRecord_Success()
         {
-            var path = "cassette/WriteTest2.yml";
             var record = new CassetteRecord(
                 new CassetteRecordRequest(
                     HttpMethod.Get.Method,
@@ -100,11 +99,12 @@ namespace VCRSharp.Tests
                         {"Content-Type", "application/json"}
                     },
                      @"{""a"": 1, ""b"": 2}"));
-            ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
-            yamlCassetteStorage.Save(path, new[] {record, record});
+            var yamlCassetteStorage = new YamlCassetteStorage();
+            var stringWriter = new StringWriter();
+            yamlCassetteStorage.Save(stringWriter, new[] {record, record});
 
             var yamlStream = new YamlStream();
-            yamlStream.Load(new StringReader(File.ReadAllText(path)));
+            yamlStream.Load(new StringReader(stringWriter.GetStringBuilder().ToString()));
             
             Assert.That(yamlStream.Documents, Has.Count.EqualTo(2));
 
@@ -151,8 +151,23 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_SingleRecord_Success()
         {
+            const string yaml =
+                "Request:\n" +
+                "  Method: GET\n" +
+                "  Uri: http://localhost:8080/test\n" +
+                "  Headers:\n" +
+                "  - Content-Type: text\n" +
+                "  - Cookie: [value=1, value=2]\n" +
+                "Response:\n" +
+                "  Version: 1.1\n" +
+                "  StatusCode: 200\n" +
+                "  StatusMessage: OK\n" +
+                "  Headers:\n" +
+                "  - Content-Type: application/json\n" +
+                "  Body: '{\"a\": 1, \"b\": 2}'";
+            
             ICassetteStorage cassette = new YamlCassetteStorage();
-            var records = cassette.Load("cassette/Test1.yml");
+            var records = cassette.Load(new StringReader(yaml));
             
             Assert.That(records, Has.Count.EqualTo(1));
             
@@ -177,8 +192,37 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_TwoRecord_Success()
         {
+            const string yaml =
+                "Request:\n" +
+                "  Method: GET\n" +
+                "  Uri: http://localhost:8080/test\n" +
+                "  Headers:\n" +
+                "  - Content-Type: text\n" +
+                "  - Cookie: [value=1, value=2]\n" +
+                "Response:\n" +
+                "  Version: 1.1\n" +
+                "  StatusCode: 200\n" +
+                "  StatusMessage: OK\n" +
+                "  Headers:\n" +
+                "  - Content-Type: application/json\n" +
+                "  Body: '{\"a\": 1, \"b\": 2}'\n" +
+                "---\n" +
+                "Request:\n" +
+                "  Method: GET\n" +
+                "  Uri: http://localhost:8080/test\n" +
+                "  Headers:\n" +
+                "  - Content-Type: text\n" +
+                "  - Cookie: [value=1, value=2]\n" +
+                "Response:\n" +
+                "  Version: 1.1\n" +
+                "  StatusCode: 200\n" +
+                "  StatusMessage: OK\n" +
+                "  Headers:\n" +
+                "  - Content-Type: application/json\n" +
+                "  Body: '{\"a\": 1, \"b\": 2}'";
+            
             ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
-            var records = yamlCassetteStorage.Load("cassette/Test2.yml");
+            var records = yamlCassetteStorage.Load(new StringReader(yaml));
             
             Assert.That(records, Has.Count.EqualTo(2));
 
@@ -208,8 +252,24 @@ namespace VCRSharp.Tests
         [Test]
         public void Load_WrongHeadersFormat_ThrowsException()
         {
+            const string yaml =
+                "Request:\n" +
+                "  Method: GET\n" +
+                "  Uri: http://localhost:8080/test\n" +
+                "  Headers:\n" +
+                "  - Cookie:\n" +
+                "      value1: 1\n" +
+                "      value2: 2\n" +
+                "Response:\n" +
+                "  Version: 1.1\n" +
+                "  StatusCode: 200\n" +
+                "  StatusMessage: OK\n" +
+                "  Headers:\n" +
+                "  - Content-Type: application/json\n" +
+                "  Body: '{\"a\": 1, \"b\": 2}'\n";
+            
             ICassetteStorage yamlCassetteStorage = new YamlCassetteStorage();
-            Assert.Throws<YamlException>(() => yamlCassetteStorage.Load("cassette/Test3.yml"));
+            Assert.Throws<YamlException>(() => yamlCassetteStorage.Load(new StringReader(yaml)));
         }
 
         [Test]
