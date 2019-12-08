@@ -44,7 +44,7 @@ namespace VCRSharp
                 // We want to ignore nullable checks in lambda function
                 #nullable disable
                 .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordRequest>(() => new CassetteRecordRequest(null, null, null, (CassetteBody)null)), r => r.OnTop())
-                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordResponse>(() => new CassetteRecordResponse(null, 0, null, null, (CassetteBody)null)), r => r.OnTop());
+                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordResponse>(() => new CassetteRecordResponse(null, 0, null, null, (CassetteBody)null, (CassetteRecordRequest)null)), r => r.OnTop());
                 #nullable enable
             _deserializer = deserializerBuilder.BuildValueDeserializer();
         }

@@ -137,13 +137,14 @@ namespace VCRSharp
         {
         }
 
-        public CassetteRecordResponse(Version version, int statusCode, string statusMessage, NameValueCollection headers, CassetteBody? body = null)
+        public CassetteRecordResponse(Version version, int statusCode, string statusMessage, NameValueCollection headers, CassetteBody? body = null, CassetteRecordRequest? request = null)
         {
             Version = version;
             StatusCode = statusCode;
             StatusMessage = statusMessage;
             Headers = headers;
             Body = body;
+            Request = request;
         }
 
         public Version Version { get; }
