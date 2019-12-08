@@ -9,11 +9,11 @@ namespace VCRSharp.TestServer.Controllers
     {
         [HttpGet]
         [Route("{id}", Name = "/api/users/get")]
-        public async Task<User> Get(int id)
+        public async Task<UserDto> Get(int id)
         {
             await Task.Yield();
             
-            return new User
+            return new UserDto
             {
                 Id = id,
                 Name = $"User {id}",
@@ -28,7 +28,7 @@ namespace VCRSharp.TestServer.Controllers
             return RedirectToRoute("/api/users/get", new {id = id});
         }
         
-        public class User
+        public class UserDto
         {
             public int Id { get; set; }
 
