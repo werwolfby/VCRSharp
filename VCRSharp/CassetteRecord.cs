@@ -114,13 +114,46 @@ namespace VCRSharp
                 case ByteArrayContent c:
                     return (await BytesCassetteBody.FromContentAsync(c), null);
                 case StreamContent c:
+                {
                     var bytesCassetteBody = await BytesCassetteBody.FromContentAsync(c);
-                    return (bytesCassetteBody, bytesCassetteBody.CreateContentWithHeaders(content.Headers));
+                    return (bytesCassetteBody, bytesCassetteBody.CreateContentWithHeaders(c.Headers));
+                }
+                case { Headers: var headers } c when IsTextContent(c):
+                {
+                    var stringContent = await c.ReadAsStringAsync();
+                    var stringCassetteBody = new StringCassetteBody(stringContent);
+                    return (stringCassetteBody, stringCassetteBody.CreateContentWithHeaders(headers));
+                }
+                case { Headers: var headers } c:
+                {
+                    var bytesContent = await c.ReadAsByteArrayAsync();
+                    var bytesCassetteBody = new BytesCassetteBody(bytesContent);
+                    return (bytesCassetteBody, bytesCassetteBody.CreateContentWithHeaders(headers));
+                }
                 case null:
                     return (null, null);
-                default:
-                    throw new ArgumentException($"Unsupported HttpContent type: {content.GetType()}", nameof(content));
             }
+        }
+
+        private static bool IsTextContent(HttpContent httpContent)
+        {
+            if (httpContent.Headers.ContentType == null)
+            {
+                return false;
+            }
+
+            if (httpContent.Headers.ContentType.MediaType.StartsWith("plain/") ||
+                httpContent.Headers.ContentType.MediaType.StartsWith("text/"))
+            {
+                return true;
+            }
+
+            if (httpContent.Headers.ContentType.MediaType == "application/json")
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 
