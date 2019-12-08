@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -38,7 +39,7 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
             Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
             Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
-            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(body));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(new StringCassetteBody(body)));
         }
         
         [Test]
@@ -62,14 +63,14 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
             Assert.That(cassette.Records[0].Request.Headers["Content-Type"], Contains.Substring("text/plain").And.Contains("charset=utf-8"));
             Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
-            Assert.That(cassette.Records[0].Request.Body, Is.EqualTo("{}"));
+            Assert.That(cassette.Records[0].Request.Body, Is.EqualTo(new StringCassetteBody("{}")));
             
             Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));
             Assert.That(cassette.Records[0].Response.StatusCode, Is.EqualTo(200));
             Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
             Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
             Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("text/plain").And.Contains("charset=utf-8"));
-            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(body));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(new StringCassetteBody(body)));
         }
         
         [Test]
@@ -93,14 +94,136 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
             Assert.That(cassette.Records[0].Request.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
             Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
-            Assert.That(cassette.Records[0].Request.Body, Is.EqualTo("{}"));
+            Assert.That(cassette.Records[0].Request.Body, Is.EqualTo(new StringCassetteBody("{}")));
             
             Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));
             Assert.That(cassette.Records[0].Response.StatusCode, Is.EqualTo(200));
             Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
             Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
             Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
-            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(body));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(new StringCassetteBody(body)));
+        }
+        
+        [Test]
+        public async Task SendAsync_PostBytesContentRequest_Success()
+        {
+            var cassette = new Cassette();
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("http://localhost:8080"),
+                Content = new ByteArrayContent(Enumerable.Range(0, 255).Select(i => (byte)i).ToArray())
+                {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("bytes/bytes")
+                    }
+                },
+            };
+
+            const string body = @"{""a"":1, ""b"": 2}";
+            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StringContent(body, Encoding.UTF8, "application/json")), cassette);
+            await handler.SendAsync(request, CancellationToken.None);
+            
+            Assert.That(cassette.Records, Has.Count.EqualTo(1));
+            Assert.That(cassette.Records[0].Request.Method, Is.EqualTo(request.Method.Method));
+            Assert.That(cassette.Records[0].Request.Uri, Is.EqualTo(request.RequestUri));
+            Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
+            Assert.That(cassette.Records[0].Request.Headers["Content-Type"], Contains.Substring("bytes/bytes"));
+            Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
+            Assert.That(cassette.Records[0].Request.Body, Is.EqualTo(new BytesCassetteBody(Enumerable.Range(0, 255).Select(i => (byte)i).ToArray())));
+            
+            Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));
+            Assert.That(cassette.Records[0].Response.StatusCode, Is.EqualTo(200));
+            Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
+            Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
+            Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(new StringCassetteBody(body)));
+        }
+        
+        [Test]
+        public async Task SendAsync_PostStreamContentRequest_Success()
+        {
+            var cassette = new Cassette();
+            var memoryStream = new MemoryStream(Enumerable.Range(0, 255).Select(i => (byte)i).ToArray());
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("http://localhost:8080"),
+                Content = new StreamContent(memoryStream)
+                {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("bytes/bytes")
+                    }
+                },
+            };
+
+            const string body = @"{""a"":1, ""b"": 2}";
+            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StringContent(body, Encoding.UTF8, "application/json")), cassette);
+            await handler.SendAsync(request, CancellationToken.None);
+            
+            Assert.That(cassette.Records, Has.Count.EqualTo(1));
+            Assert.That(cassette.Records[0].Request.Method, Is.EqualTo(request.Method.Method));
+            Assert.That(cassette.Records[0].Request.Uri, Is.EqualTo(request.RequestUri));
+            Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
+            Assert.That(cassette.Records[0].Request.Headers["Content-Type"], Contains.Substring("bytes/bytes"));
+            Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
+            Assert.That(cassette.Records[0].Request.Body, Is.EqualTo(new BytesCassetteBody(Enumerable.Range(0, 255).Select(i => (byte)i).ToArray())));
+            
+            Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));
+            Assert.That(cassette.Records[0].Response.StatusCode, Is.EqualTo(200));
+            Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
+            Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
+            Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(new StringCassetteBody(body)));
+        }
+        
+        [Test]
+        public async Task SendAsync_PostStreamContentRequestReturnStreamContent_Success()
+        {
+            var cassette = new Cassette();
+            var memoryStream = new MemoryStream(Enumerable.Range(0, 255).Select(i => (byte)i).ToArray());
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("http://localhost:8080"),
+                Content = new StreamContent(memoryStream)
+                {
+                    Headers =
+                    {
+                        ContentType = new MediaTypeHeaderValue("bytes/bytes")
+                    }
+                },
+            };
+
+            const string body = @"{""a"":1, ""b"": 2}";
+            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes(body)))
+            {
+                Headers =
+                {
+                    ContentType = new MediaTypeHeaderValue("application/json")
+                    {
+                        CharSet = "utf-8"
+                    }
+                }
+            }), cassette);
+            await handler.SendAsync(request, CancellationToken.None);
+            
+            Assert.That(cassette.Records, Has.Count.EqualTo(1));
+            Assert.That(cassette.Records[0].Request.Method, Is.EqualTo(request.Method.Method));
+            Assert.That(cassette.Records[0].Request.Uri, Is.EqualTo(request.RequestUri));
+            Assert.That(cassette.Records[0].Request.Headers, Has.Count.GreaterThanOrEqualTo(1));
+            Assert.That(cassette.Records[0].Request.Headers["Content-Type"], Contains.Substring("bytes/bytes"));
+            Assert.That(cassette.Records[0].Request.Headers["Host"], Is.EqualTo("localhost"));
+            Assert.That(cassette.Records[0].Request.Body, Is.EqualTo(new BytesCassetteBody(Enumerable.Range(0, 255).Select(i => (byte)i).ToArray())));
+            
+            Assert.That(cassette.Records[0].Response.Version, Is.EqualTo(new Version(1, 1)));
+            Assert.That(cassette.Records[0].Response.StatusCode, Is.EqualTo(200));
+            Assert.That(cassette.Records[0].Response.Headers, Has.Count.EqualTo(2));
+            Assert.That(cassette.Records[0].Response.Headers["Server"], Is.EqualTo("Test-Server"));
+            Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
+            Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(new BytesCassetteBody(Encoding.UTF8.GetBytes(body))));
         }
         
         private class PublicRecordingHttpMessageHandler : RecordingHttpMessageHandler

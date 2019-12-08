@@ -1,5 +1,5 @@
-﻿using System.Net.Http;
-using System.Text;
+﻿using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,14 +18,13 @@ namespace VCRSharp
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            string? requestContent = null; 
-            if (request.Content != null)
-            {
-                var charSet = request.Content.Headers.ContentType.CharSet;
-                requestContent = await request.Content.ReadAsStringAsync();
-                request.Content = new StringContent(requestContent, Encoding.GetEncoding(charSet), request.Content.Headers.ContentType.MediaType);
-            }
+            var (requestContent, newRequestContent) = await CassetteBody.CreateCassetteBody(request.Content);
 
+            if (newRequestContent != null)
+            {
+                request.Content = newRequestContent;
+            }
+            
             var response = await base.SendAsync(request, cancellationToken);
             
             var recordRequest = CassetteRecordRequest.NewFromRequest(request);
@@ -40,8 +39,12 @@ namespace VCRSharp
             var recordResponse = CassetteRecordResponse.NewFromResponse(response);
             if (response.Content != null)
             {
-                recordResponse.Body = await response.Content.ReadAsStringAsync();
-                response.Content = new StringContent(recordResponse.Body);
+                var (responseContent, newResponseContent) = await CassetteBody.CreateCassetteBody(response.Content);
+                recordResponse.Body = responseContent;
+                if (newResponseContent != null)
+                {
+                    response.Content = newResponseContent;
+                }
             }
             
             var record = new CassetteRecord(recordRequest, recordResponse);

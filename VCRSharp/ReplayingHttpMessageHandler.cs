@@ -23,10 +23,12 @@ namespace VCRSharp
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var newRecord = CassetteRecordRequest.NewFromRequest(request);
-            if (request.Content != null)
+            var (requestContent, newRequestContent) = await CassetteBody.CreateCassetteBody(request.Content);
+            newRecord.Body = requestContent;
+
+            if (newRequestContent != null)
             {
-                newRecord.Body = await request.Content.ReadAsStringAsync();
-                request.Content = new StringContent(newRecord.Body);
+                request.Content = newRequestContent;
             }
 
             var record = _cassette.Find(newRecord, _comparer);
@@ -42,12 +44,12 @@ namespace VCRSharp
                 StatusCode = (HttpStatusCode)recordResponse.StatusCode,
                 ReasonPhrase = recordResponse.StatusMessage,
                 RequestMessage = request,
-                Content = new StringContent(recordResponse.Body)
+                Content = recordResponse.Body?.CreateContent()
             };
             foreach (string? header in recordResponse.Headers)
             {
                 if (!response.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)) &&
-                    !response.Content.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)))
+                    response.Content?.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)) != true)
                 {
                     throw new ArgumentException($"Can't add {header} to response");
                 }

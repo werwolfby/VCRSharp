@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -57,8 +60,9 @@ namespace VCRSharp.Tests
             Assert.That(response.Headers.GetValues("Server"), Is.EqualTo(new[] {record.Response.Headers["Server"]}));
         }
         
-        [Test]
-        public async Task SendAsync_PostRequest_Success()
+        [TestCase(typeof(StringCassetteBody))]
+        [TestCase(typeof(BytesCassetteBody))]
+        public async Task SendAsync_PostRequest_Success(Type cassetteBodyType)
         {
             var cassette = new Cassette();
             var record = new CassetteRecord(
@@ -82,6 +86,12 @@ namespace VCRSharp.Tests
             cassette.Add(record);
             
             var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette);
+            var contentFactory = new Dictionary<Type, Func<HttpContent>>
+            {
+                {typeof(StringCassetteBody), () => new StringContent("{}")},
+                {typeof(BytesCassetteBody), () => new StreamContent(new MemoryStream(Encoding.UTF8.GetBytes("{}")))},
+            };
+            var content = contentFactory[cassetteBodyType]();
 
             var request = new HttpRequestMessage
             {
@@ -92,7 +102,7 @@ namespace VCRSharp.Tests
                 },
                 Version = new Version(1, 1),
                 RequestUri = new Uri("http://localhost:8080/test"),
-                Content = new StringContent("{}"),
+                Content = content,
             };
             var response = await replayingHttpMessageHandler.SendAsync(request, CancellationToken.None);
             

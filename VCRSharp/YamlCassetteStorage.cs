@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using YamlDotNet.Core;
@@ -23,12 +24,14 @@ namespace VCRSharp
             var uriYamlTypeConverter = new UriYamlTypeConverter();
             var versionYamlTypeConverter = new VersionYamlTypeConverter();
             var nameValueCollectionYamlTypeConverter = new NameValueCollectionYamlTypeConverter();
+            var cassetteBodyYamlTypeConverter = new CassetteBodyYamlTypeConverter();
             
             var serializerBuilder = new SerializerBuilder()
                 .DisableAliases()
                 .WithTypeConverter(versionYamlTypeConverter)
                 .WithTypeConverter(nameValueCollectionYamlTypeConverter)
                 .WithTypeConverter(uriYamlTypeConverter)
+                .WithTypeConverter(cassetteBodyYamlTypeConverter)
                 .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults);
             _serializer = serializerBuilder.BuildValueSerializer();
 
@@ -36,9 +39,13 @@ namespace VCRSharp
                 .WithTypeConverter(versionYamlTypeConverter)
                 .WithTypeConverter(nameValueCollectionYamlTypeConverter)
                 .WithTypeConverter(uriYamlTypeConverter)
+                .WithTypeConverter(cassetteBodyYamlTypeConverter)
                 .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecord>(), r => r.OnTop())
-                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordRequest>(), r => r.OnTop())
-                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordResponse>(), r => r.OnTop());
+                // We want to ignore nullable checks in lambda function
+                #nullable disable
+                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordRequest>(() => new CassetteRecordRequest(null, null, null, (CassetteBody)null)), r => r.OnTop())
+                .WithNodeDeserializer(new ConstructorNodeDeserializer<CassetteRecordResponse>(() => new CassetteRecordResponse(null, 0, null, null, (CassetteBody)null)), r => r.OnTop());
+                #nullable enable
             _deserializer = deserializerBuilder.BuildValueDeserializer();
         }
 
@@ -177,6 +184,22 @@ namespace VCRSharp
         
         private class ConstructorNodeDeserializer<T> : INodeDeserializer
         {
+            private readonly ConstructorInfo? _constructorInfo;
+
+            public ConstructorNodeDeserializer() : this((ConstructorInfo?)null)
+            {
+            }
+
+            public ConstructorNodeDeserializer(Expression<Func<T>> expression)
+            {
+                _constructorInfo = ((NewExpression)expression.Body).Constructor;
+            }
+
+            public ConstructorNodeDeserializer(ConstructorInfo? constructorInfo)
+            {
+                _constructorInfo = constructorInfo;
+            }
+
             public bool Deserialize(IParser parser, Type expectedType, Func<IParser, Type, object?> nestedObjectDeserializer, out object? value)
             {
                 if (expectedType != typeof(T) || !parser.TryConsume(out MappingStart _))
@@ -185,7 +208,7 @@ namespace VCRSharp
                     return false;
                 }
 
-                var constructor = expectedType.GetConstructors().Single();
+                var constructor = _constructorInfo ?? expectedType.GetConstructors().Single();
                 var parameters = constructor.GetParameters();
                 var expectedParameters = parameters
                     .ToDictionary(
@@ -220,6 +243,42 @@ namespace VCRSharp
                 var parameterValues = parameters.Select(p => expectedParameters.TryGetValue(p.Name, out var parameterValue) ? parameterValue.value : null).ToArray();
                 value = constructor.Invoke(parameterValues);
                 return true;
+            }
+        }
+        
+        private class CassetteBodyYamlTypeConverter : IYamlTypeConverter
+        {
+            private const string BinaryTag = "!binary";
+
+            public bool Accepts(Type type)
+                => typeof(CassetteBody).IsAssignableFrom(type);
+
+            public object ReadYaml(IParser parser, Type type)
+            {
+                var scalar = parser.Consume<Scalar>();
+                return scalar.Tag switch
+                {
+                    BinaryTag => new BytesCassetteBody(Convert.FromBase64String(scalar.Value)),
+                    _ => new StringCassetteBody(scalar.Value)
+                };
+            }
+
+            public void WriteYaml(IEmitter emitter, object? value, Type type)
+            {
+                var cassetteBody = (CassetteBody)(value ?? throw new ArgumentNullException(nameof(value)));
+                switch (cassetteBody)
+                {
+                    case StringCassetteBody s:
+                        emitter.Emit(new Scalar(null, null,
+                            s.Value, ScalarStyle.Any, true,
+                            false));
+                        break;
+                    case BytesCassetteBody b:
+                        emitter.Emit(new Scalar(null, BinaryTag,
+                            Convert.ToBase64String(b.Value, Base64FormattingOptions.InsertLineBreaks), 
+                            ScalarStyle.Literal, true, false));
+                        break;
+                }
             }
         }
     }
