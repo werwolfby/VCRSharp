@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -15,7 +15,7 @@ namespace VCRSharp.IntegrationTests
         {
             const string uri = "https://reqres.in/api/users/2";
             var httpClientHandler = new HttpClientHandler();
-            var innerHandler = new MockHttpRequestHandler(httpClientHandler);
+            var innerHandler = new StubHttpRequestHandler(httpClientHandler);
             var cassette = new Cassette();
             var tryReplayHandler = new TryReplayHttpMessageHandler(cassette, innerHandler);
 
@@ -31,31 +31,16 @@ namespace VCRSharp.IntegrationTests
             response = await httpClient.GetAsync(uri);
             await AssertResponse(response);
             Assert.That(innerHandler.Invoked, Is.False);
+            Assert.That(response.Headers.Date, Is.EqualTo(date));
 
             static async Task AssertResponse(HttpResponseMessage response)
             {
                 Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                Assert.That(response.Headers.Date, Is.Not.Null.And.EqualTo(DateTimeOffset.Now).Within(5).Seconds);
+                Assert.That(response.Headers.Date, Is.Not.Null.And.EqualTo(DateTimeOffset.Now).Within(Debugger.IsAttached ? 60 * 5 : 5).Seconds);
                 var actualJson = JObject.Parse(await response.Content.ReadAsStringAsync());
                 var expectedJson = JObject.Parse("{\"data\":{\"id\":2,\"email\":\"janet.weaver@reqres.in\",\"first_name\":\"Janet\",\"last_name\":\"Weaver\",\"avatar\":\"https://s3.amazonaws.com/uifaces/faces/twitter/josephstein/128.jpg\"}}");
                 Assert.That(actualJson, Is.EqualTo(expectedJson));
             }
         }
-        
-        private class MockHttpRequestHandler : DelegatingHandler
-        {
-            public MockHttpRequestHandler(HttpMessageHandler innerHandler) : base(innerHandler)
-            {
-            }
-
-            public bool Invoked { get; set; }
-
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                Invoked = true;
-                return base.SendAsync(request, cancellationToken);
-            }
-        }
-
     }
 }
