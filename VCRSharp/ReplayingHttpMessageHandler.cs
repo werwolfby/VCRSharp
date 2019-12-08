@@ -22,14 +22,7 @@ namespace VCRSharp
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var newRecord = CassetteRecordRequest.NewFromRequest(request);
-            var (requestContent, newRequestContent) = await CassetteBody.CreateCassetteBody(request.Content);
-            newRecord.Body = requestContent;
-
-            if (newRequestContent != null)
-            {
-                request.Content = newRequestContent;
-            }
+            var newRecord = await CassetteRecordRequest.CreateFromRequest(request);
 
             var record = _cassette.Find(newRecord, _comparer);
             if (record == null)
@@ -38,23 +31,12 @@ namespace VCRSharp
             }
 
             var recordResponse = record.Response;
-            var response = new HttpResponseMessage
-            {
-                Version = recordResponse.Version,
-                StatusCode = (HttpStatusCode)recordResponse.StatusCode,
-                ReasonPhrase = recordResponse.StatusMessage,
-                RequestMessage = request,
-                Content = recordResponse.Body?.CreateContent()
-            };
-            foreach (string? header in recordResponse.Headers)
-            {
-                if (!response.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)) &&
-                    response.Content?.Headers.TryAddWithoutValidation(header, recordResponse.Headers.GetValues(header)) != true)
-                {
-                    throw new ArgumentException($"Can't add {header} to response");
-                }
-            }
+            var response = recordResponse.ToResponseMessage();
+            
+            // If there are no changes in request stored in cassette, then use original request
+            response.RequestMessage ??= request;
 
+            // Simulate async processing
             await Task.Yield();
 
             return response;

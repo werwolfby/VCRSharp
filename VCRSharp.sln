@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCRSharp.Tests", "VCRSharp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCRSharp.IntegrationTests", "VCRSharp.IntegrationTests\VCRSharp.IntegrationTests.csproj", "{5E7CB489-4871-4F75-9278-6905B2A3EFDE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCRSharp.TestServer", "VCRSharp.TestServer\VCRSharp.TestServer.csproj", "{7507B04C-0F7C-4774-A375-E50F001515BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{5E7CB489-4871-4F75-9278-6905B2A3EFDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E7CB489-4871-4F75-9278-6905B2A3EFDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E7CB489-4871-4F75-9278-6905B2A3EFDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7507B04C-0F7C-4774-A375-E50F001515BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7507B04C-0F7C-4774-A375-E50F001515BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7507B04C-0F7C-4774-A375-E50F001515BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7507B04C-0F7C-4774-A375-E50F001515BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
