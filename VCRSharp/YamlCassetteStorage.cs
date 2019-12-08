@@ -79,7 +79,13 @@ namespace VCRSharp
 
             return records;
         }
-        
+
+        public static Cassette LoadCassette(TextReader textReader) => new YamlCassetteStorage().LoadCassette(textReader);
+
+        public static Cassette LoadCassette(StreamReader streamReader) => new YamlCassetteStorage().LoadCassette(streamReader);
+
+        public static Cassette LoadCassette(string path) => new YamlCassetteStorage().LoadCassette(path);
+
         private class UriYamlTypeConverter : IYamlTypeConverter
         {
             public bool Accepts(Type type)
