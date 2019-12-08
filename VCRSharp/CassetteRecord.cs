@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Numerics;
@@ -22,7 +23,7 @@ namespace VCRSharp
         public CassetteRecordResponse Response { get; }
     }
 
-    public class CassetteRecordRequest
+    public class CassetteRecordRequest : IEquatable<CassetteRecordRequest>
     {
         public CassetteRecordRequest(string method, Uri uri, NameValueCollection headers, string body) : this(method, uri, headers, new StringCassetteBody(body))
         {
@@ -44,10 +45,85 @@ namespace VCRSharp
         
         public CassetteBody? Body { get; set; }
 
-        public static CassetteRecordRequest NewFromRequest(HttpRequestMessage request)
+        public HttpRequestMessage ToRequestMessage()
         {
-            return new CassetteRecordRequest(request.Method.Method, request.RequestUri,
+            var request = new HttpRequestMessage(new HttpMethod(Method), Uri)
+            {
+                Content = Body?.CreateContent()
+            };
+
+            foreach (string? header in Headers)
+            {
+                var values = Headers.GetValues(header);
+                if (!request.Headers.TryAddWithoutValidation(header, values) &&
+                    request.Content?.Headers.TryAddWithoutValidation(header, values) != true)
+                {
+                    throw new ArgumentException($"Can't add {header} to request");
+                }
+            }
+
+            return request;
+        }
+
+        public bool Equals(CassetteRecordRequest? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (Method != other.Method || !Uri.Equals(other.Uri) || !Equals(Body, other.Body)) return false;
+
+            if (Headers.Count != other.Headers.Count) return false;
+            foreach (string? header in Headers)
+            {
+                var values = Headers.GetValues(header);
+                var otherValues = other.Headers.GetValues(header);
+
+                if (values == null || otherValues == null)
+                {
+                    return false;
+                }
+
+                if (!values.SequenceEqual(otherValues))
+                {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CassetteRecordRequest) obj);
+        }
+
+        public override int GetHashCode() => HashCode.Combine(Method, Uri);
+
+        public static bool operator ==(CassetteRecordRequest? left, CassetteRecordRequest? right) => Equals(left, right);
+
+        public static bool operator !=(CassetteRecordRequest? left, CassetteRecordRequest? right) => !Equals(left, right);
+
+        public static async Task<CassetteRecordRequest> CreateFromRequest(HttpRequestMessage request)
+        {
+            var record = new CassetteRecordRequest(request.Method.Method, request.RequestUri,
                 request.ToNameValueCollection());
+
+            // Host header is required by HTTP 1.1 spec, so we should add it if it is not provided
+            if (record.Headers["Host"] == null)
+            {
+                record.Headers.Add("Host", request.RequestUri.IdnHost);
+            }
+
+            var (body, newContent) = await CassetteBody.CreateCassetteBody(request.Content);
+            record.Body = body;
+            if (newContent != null)
+            {
+                request.Content = newContent;
+            }
+
+            return record;
         }
     }
 
@@ -77,11 +153,57 @@ namespace VCRSharp
         public string StatusMessage { get; }
         
         public NameValueCollection Headers { get; }
-        
-        public CassetteBody? Body { get; set; }
 
-        public static CassetteRecordResponse NewFromResponse(HttpResponseMessage response)
-            => new CassetteRecordResponse(response.Version, (int) response.StatusCode, response.ReasonPhrase, response.ToNameValueCollection());
+        public CassetteBody? Body { get; set; }
+        
+        public CassetteRecordRequest? Request { get; set; }
+
+        public HttpResponseMessage ToResponseMessage()
+        {
+            var response = new HttpResponseMessage((HttpStatusCode)StatusCode)
+            {
+                RequestMessage = Request?.ToRequestMessage(),
+                Content = Body?.CreateContent()
+            };
+
+            foreach (string? header in Headers)
+            {
+                var values = Headers.GetValues(header);
+                if (!response.Headers.TryAddWithoutValidation(header, values) &&
+                    response.Content?.Headers.TryAddWithoutValidation(header, values) != true)
+                {
+                    throw new ArgumentException($"Can't add {header} to response");
+                }
+            }
+
+            return response;
+        }
+
+        public static async Task<CassetteRecordResponse> CreateFromResponse(HttpResponseMessage response, CassetteRecordRequest recordRequest)
+        {
+            var record = new CassetteRecordResponse(response.Version, (int) response.StatusCode, response.ReasonPhrase, response.ToNameValueCollection())
+            {
+                Request = await CassetteRecordRequest.CreateFromRequest(response.RequestMessage)
+            };
+
+            // In case of Redirect inner innerHandler can create a new request, that actually did redirect
+            // External users can expect this RequestMessage for check redirecting URI for example
+            // innerHandler can change request, so we should create a new CassetteRecordRequest
+            // from response and compare it with the original value 
+            if (record.Request == recordRequest)
+            {
+                record.Request = null;
+            }
+
+            var (body, newContent) = await CassetteBody.CreateCassetteBody(response.Content);
+            record.Body = body;
+            if (newContent != null)
+            {
+                response.Content = newContent;
+            }
+
+            return record;
+        }
     }
 
     public abstract class CassetteBody
