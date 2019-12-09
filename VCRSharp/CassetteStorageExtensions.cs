@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -25,6 +26,13 @@ namespace VCRSharp
 
         public static IReadOnlyList<CassetteRecord> Load(this ICassetteStorage storage, string path)
         {
+            var fileInfo = new FileInfo(path);
+
+            if (!fileInfo.Exists)
+            {
+                return Array.Empty<CassetteRecord>();
+            }
+            
             using var streamReader = new StreamReader(path, Encoding.UTF8);
             return storage.Load(streamReader);
         }
