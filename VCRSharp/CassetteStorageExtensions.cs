@@ -7,9 +7,9 @@ namespace VCRSharp
 {
     public static class CassetteStorageExtensions
     {
-        public static void Save(this ICassetteStorage storage, StreamWriter streamWriter, IEnumerable<CassetteRecord> records) => storage.Save((TextWriter)streamWriter, records);
+        public static void Save(this ICassetteStorage storage, StreamWriter streamWriter, IEnumerable<CassetteRecord> records) => storage.Save(streamWriter, records);
 
-        public static IReadOnlyList<CassetteRecord> Load(this ICassetteStorage storage, StreamReader streamReader) => storage.Load((TextReader) streamReader);
+        public static IReadOnlyList<CassetteRecord> Load(this ICassetteStorage storage, StreamReader streamReader) => storage.Load(streamReader);
         
         public static void Save(this ICassetteStorage storage, string path, IEnumerable<CassetteRecord> records)
         {
