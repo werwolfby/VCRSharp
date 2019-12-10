@@ -275,14 +275,11 @@ namespace VCRSharp
                 switch (cassetteBody)
                 {
                     case StringCassetteBody s:
-                        emitter.Emit(new Scalar(null, null,
-                            s.Value, ScalarStyle.Any, true,
-                            false));
+                        emitter.Emit(new Scalar(null, null, s.Value, ScalarStyle.Literal, true, false));
                         break;
                     case BytesCassetteBody b:
-                        emitter.Emit(new Scalar(null, BinaryTag,
-                            Convert.ToBase64String(b.Value, Base64FormattingOptions.InsertLineBreaks), 
-                            ScalarStyle.Literal, true, false));
+                        var scalarValue = Convert.ToBase64String(b.Value, Base64FormattingOptions.InsertLineBreaks);
+                        emitter.Emit(new Scalar(null, BinaryTag, scalarValue, ScalarStyle.Literal, true, false));
                         break;
                 }
             }

@@ -1,6 +1,6 @@
 ﻿Request:
   Method: GET
-  Uri: http://localhost:5000/api/users/1
+  Uri: http://localhost:5000/api/get_users/3
   Headers:
   - Host: localhost
 Response:
@@ -8,8 +8,13 @@ Response:
   StatusCode: 200
   StatusMessage: OK
   Headers:
-  - Date: Sun, 08 Dec 2019 10:10:39 GMT
+  - Date: Mon, 09 Dec 2019 06:10:40 GMT
   - Server: Kestrel
   - Transfer-Encoding: chunked
   - Content-Type: application/json; charset=utf-8
-  Body: '{"id":1,"name":"User 1"}'
+  Body: '{"id":3,"name":"User 3"}'
+  Request:
+    Method: GET
+    Uri: http://localhost:5000/api/users/3
+    Headers:
+    - Host: localhost

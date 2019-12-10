@@ -10,16 +10,20 @@ using VCRSharp.TestServer;
 
 namespace VCRSharp.IntegrationTests
 {
-    public class TestServerTests
+    public class TestServerTests : IWithVcr
     {
         private readonly Uri _baseAddress = new Uri("http://localhost:5000");
+
+        public Cassette Cassette { get; set; }
+        
+        public HttpMessageHandler HttpMessageHandler { get; set; }
 
         [Test]
         public async Task GetUsersApi_InvokedOnFirstCallFromCassetteOnSecondCall_Success()
         {
-            using var host = BuildAndStartHost();
+            using var _ = BuildAndStartHost();
 
-            var httpClientHandler = new HttpClientHandler();
+            var httpClientHandler = new SocketsHttpHandler();
             var innerHandler = new StubHttpRequestHandler(httpClientHandler);
             var cassette = new Cassette();
             var tryReplayHandler = new TryReplayHttpMessageHandler(cassette, innerHandler);
@@ -44,9 +48,9 @@ namespace VCRSharp.IntegrationTests
         [Test]
         public async Task GetRedirectUsersApi_InvokedOnFirstCallFromCassetteOnSecondCall_Success()
         {
-            using var host = BuildAndStartHost();
+            using var _ = BuildAndStartHost();
 
-            var httpClientHandler = new HttpClientHandler();
+            var httpClientHandler = new SocketsHttpHandler();
             var innerHandler = new StubHttpRequestHandler(httpClientHandler);
             var cassette = new Cassette();
             var tryReplayHandler = new TryReplayHttpMessageHandler(cassette, innerHandler);
@@ -71,112 +75,54 @@ namespace VCRSharp.IntegrationTests
         }
 
         [Test]
+        [UseVcr("cassette")]
         public async Task Load_GetUser_SuccessReadFromFile()
         {
-            const string cassettePath = "cassette/Load_GetUser_SuccessReadFromFile.yml";
-            if (!File.Exists(cassettePath))
-            {
-                using var host = BuildAndStartHost();
-                var httpClientHandler = new HttpClientHandler();
-                var innerHandler = new StubHttpRequestHandler(httpClientHandler);
-                var cassette = new Cassette();
-                var tryReplayHandler = new TryReplayHttpMessageHandler(cassette, innerHandler);
+            using var _ = Cassette.Records.Count == 0 ? BuildAndStartHost() : null;
 
-                using var httpClient = new HttpClient(tryReplayHandler) {BaseAddress = _baseAddress};
-                await httpClient.GetStringAsync("/api/users/1");
-                
-                var yamlStorage = new YamlCassetteStorage();
-                yamlStorage.Save(cassettePath, cassette.Records);
-            }
+            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            var user = await httpClient.GetStringAsync("/api/users/1");
 
-            {
-                var cassette = YamlCassetteStorage.LoadCassette(cassettePath);
-                
-                var replayingHandler = new ReplayingHttpMessageHandler(cassette);
-                
-                using var httpClient = new HttpClient(replayingHandler) {BaseAddress = _baseAddress};
-                var user = await httpClient.GetStringAsync("/api/users/1");
+            var actual = JObject.Parse(user);
+            var expected = JObject.Parse("{\"id\": 1, \"name\": \"User 1\"}");
 
-                var actual = JObject.Parse(user);
-                var expected = JObject.Parse("{\"id\": 1, \"name\": \"User 1\"}");
-            
-                Assert.That(actual, Is.EqualTo(expected));
-            }
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         [Test]
+        [UseVcr("cassette")]
         public async Task LoadMultiple_GetUser_SuccessReadFromFile()
         {
-            const string cassettePath = "cassette/LoadMultiple_GetUser_SuccessReadFromFile.yml";
-            if (!File.Exists(cassettePath))
-            {
-                using var host = BuildAndStartHost();
-                var httpClientHandler = new HttpClientHandler();
-                var innerHandler = new StubHttpRequestHandler(httpClientHandler);
-                var cassette = new Cassette();
-                var tryReplayHandler = new TryReplayHttpMessageHandler(cassette, innerHandler);
+            using var _ = Cassette.Records.Count == 0 ? BuildAndStartHost() : null;
 
-                using var httpClient = new HttpClient(tryReplayHandler) {BaseAddress = _baseAddress};
-                await httpClient.GetStringAsync("/api/users/4");
-                await httpClient.GetStringAsync("/api/users/5");
-                
-                var yamlStorage = new YamlCassetteStorage();
-                yamlStorage.Save(cassettePath, cassette.Records);
-            }
+            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            var user4 = await httpClient.GetStringAsync("/api/users/4");
+            var user5 = await httpClient.GetStringAsync("/api/users/5");
 
-            {
-                var cassette = YamlCassetteStorage.LoadCassette(cassettePath);
-                
-                var replayingHandler = new ReplayingHttpMessageHandler(cassette);
-                
-                using var httpClient = new HttpClient(replayingHandler) {BaseAddress = _baseAddress};
-                var user4 = await httpClient.GetStringAsync("/api/users/4");
-                var user5 = await httpClient.GetStringAsync("/api/users/5");
+            var actual4 = JObject.Parse(user4);
+            var expected4 = JObject.Parse("{\"id\": 4, \"name\": \"User 4\"}");
 
-                var actual4 = JObject.Parse(user4);
-                var expected4 = JObject.Parse("{\"id\": 4, \"name\": \"User 4\"}");
-            
-                Assert.That(actual4, Is.EqualTo(expected4));
+            Assert.That(actual4, Is.EqualTo(expected4));
 
-                var actual5 = JObject.Parse(user5);
-                var expected5 = JObject.Parse("{\"id\": 5, \"name\": \"User 5\"}");
-            
-                Assert.That(actual5, Is.EqualTo(expected5));
-            }
+            var actual5 = JObject.Parse(user5);
+            var expected5 = JObject.Parse("{\"id\": 5, \"name\": \"User 5\"}");
+
+            Assert.That(actual5, Is.EqualTo(expected5));
         }
 
         [Test]
+        [UseVcr("cassette")]
         public async Task Load_GetUserRedirect_SuccessReadFromFile()
         {
-            const string cassettePath = "cassette/Load_GetUserRedirect_SuccessReadFromFile.yml";
-            if (!File.Exists(cassettePath))
-            {
-                using var host = BuildAndStartHost();
-                var httpClientHandler = new HttpClientHandler();
-                var innerHandler = new StubHttpRequestHandler(httpClientHandler);
-                var cassette = new Cassette();
-                var tryReplayHandler = new TryReplayHttpMessageHandler(cassette, innerHandler);
+            using var _ = Cassette.Records.Count == 0 ? BuildAndStartHost() : null;
 
-                using var httpClient = new HttpClient(tryReplayHandler) {BaseAddress = _baseAddress};
-                await httpClient.GetStringAsync("/api/get_users/3");
-                
-                var yamlStorage = new YamlCassetteStorage();
-                yamlStorage.Save(cassettePath, cassette.Records);
-            }
+            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            var user = await httpClient.GetStringAsync("/api/get_users/3");
 
-            {
-                var cassette = YamlCassetteStorage.LoadCassette(cassettePath);
-                
-                var replayingHandler = new ReplayingHttpMessageHandler(cassette);
-                
-                using var httpClient = new HttpClient(replayingHandler) {BaseAddress = _baseAddress};
-                var user = await httpClient.GetStringAsync("/api/get_users/3");
+            var actual = JObject.Parse(user);
+            var expected = JObject.Parse("{\"id\": 3, \"name\": \"User 3\"}");
 
-                var actual = JObject.Parse(user);
-                var expected = JObject.Parse("{\"id\": 3, \"name\": \"User 3\"}");
-            
-                Assert.That(actual, Is.EqualTo(expected));
-            }
+            Assert.That(actual, Is.EqualTo(expected));
         }
 
         private static IHost BuildAndStartHost()

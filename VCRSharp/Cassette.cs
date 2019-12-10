@@ -38,8 +38,6 @@ namespace VCRSharp
         public IReadOnlyList<CassetteRecord> Records => _records;
 
         public void Add(CassetteRecord record) => _records.Add(record);
-        
-        public void AddRange(IEnumerable<CassetteRecord> records) => _records.AddRange(records);
 
         public CassetteRecord? Find(CassetteRecordRequest request,
             IEqualityComparer<CassetteRecordRequest>? comparer = null)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -6,9 +7,9 @@ namespace VCRSharp
 {
     public static class CassetteStorageExtensions
     {
-        public static void Save(this ICassetteStorage storage, StreamWriter streamWriter, IEnumerable<CassetteRecord> records) => storage.Save((TextWriter)streamWriter, records);
+        public static void Save(this ICassetteStorage storage, StreamWriter streamWriter, IEnumerable<CassetteRecord> records) => storage.Save(streamWriter, records);
 
-        public static IReadOnlyList<CassetteRecord> Load(this ICassetteStorage storage, StreamReader streamReader) => storage.Load((TextReader) streamReader);
+        public static IReadOnlyList<CassetteRecord> Load(this ICassetteStorage storage, StreamReader streamReader) => storage.Load(streamReader);
         
         public static void Save(this ICassetteStorage storage, string path, IEnumerable<CassetteRecord> records)
         {
@@ -25,6 +26,13 @@ namespace VCRSharp
 
         public static IReadOnlyList<CassetteRecord> Load(this ICassetteStorage storage, string path)
         {
+            var fileInfo = new FileInfo(path);
+
+            if (!fileInfo.Exists)
+            {
+                return Array.Empty<CassetteRecord>();
+            }
+            
             using var streamReader = new StreamReader(path, Encoding.UTF8);
             return storage.Load(streamReader);
         }
