@@ -20,7 +20,8 @@ namespace VCRSharp
                 Directory.CreateDirectory(fileInfo.Directory.FullName);
             }
             
-            using var streamWriter = new StreamWriter(path, false, Encoding.UTF8);
+            var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan);
+            using var streamWriter = new StreamWriter(fileStream, Encoding.UTF8);
             storage.Save(streamWriter, records);
         }
 
@@ -33,7 +34,8 @@ namespace VCRSharp
                 return Array.Empty<CassetteRecord>();
             }
             
-            using var streamReader = new StreamReader(path, Encoding.UTF8);
+            var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.SequentialScan);
+            using var streamReader = new StreamReader(fileStream, Encoding.UTF8);
             return storage.Load(streamReader);
         }
         

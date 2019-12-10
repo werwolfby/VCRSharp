@@ -213,8 +213,8 @@ namespace VCRSharp
                     value = null;
                     return false;
                 }
-
-                var constructor = _constructorInfo ?? expectedType.GetConstructors().Single();
+                
+                var constructor = _constructorInfo ?? expectedType.GetTypeInfo().DeclaredConstructors.Single();
                 var parameters = constructor.GetParameters();
                 var expectedParameters = parameters
                     .ToDictionary(
@@ -257,7 +257,7 @@ namespace VCRSharp
             private const string BinaryTag = "!binary";
 
             public bool Accepts(Type type)
-                => typeof(CassetteBody).IsAssignableFrom(type);
+                => typeof(CassetteBody).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
 
             public object ReadYaml(IParser parser, Type type)
             {
