@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using NUnit.Framework;
 using YamlDotNet.Core.Tokens;
@@ -70,6 +71,7 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Find(new CassetteRecordRequest("POST", new Uri("http://localhost:8080/test123"), new NameValueCollection())), Is.EqualTo(record1));
         }
         
+        [ExcludeFromCodeCoverage]
         private class MethodEqualityComparer : IEqualityComparer<CassetteRecordRequest>
         {
             public bool Equals(CassetteRecordRequest x, CassetteRecordRequest y) => x?.Method == y?.Method;
