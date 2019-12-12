@@ -84,9 +84,9 @@ namespace VCRSharp.Tests
         }
         
         [Test]
-        public void Save_SingleBytesRecord_Success()
+        public void Save_SingleBytesRecord_Success([Values(10, 57 - 1, 57, 57 + 1, 57 * 2 - 1, 57 * 2, 57 * 2 + 1, 200)]int bodyLength)
         {
-            var responseBody = Enumerable.Range(0, 10).Select(i => (byte)i).ToArray();
+            var responseBody = Enumerable.Range(0, bodyLength).Select(i => (byte)i).ToArray();
             var record = new CassetteRecord(
                 new CassetteRecordRequest(
                     HttpMethod.Get.Method,
@@ -142,7 +142,7 @@ namespace VCRSharp.Tests
             Assert.That(responseNode.Children[new YamlScalarNode("Version")], Is.TypeOf<YamlScalarNode>().And.Property(nameof(YamlScalarNode.Value)).EqualTo(record.Response.Version.ToString()));
             Assert.That(responseNode.Children[new YamlScalarNode("StatusCode")], Is.TypeOf<YamlScalarNode>().And.Property(nameof(YamlScalarNode.Value)).EqualTo(record.Response.StatusCode.ToString()));
             Assert.That(responseNode.Children[new YamlScalarNode("StatusMessage")], Is.TypeOf<YamlScalarNode>().And.Property(nameof(YamlScalarNode.Value)).EqualTo(record.Response.StatusMessage));
-            Assert.That(responseNode.Children[new YamlScalarNode("Body")], Is.TypeOf<YamlScalarNode>().And.Property(nameof(YamlScalarNode.Value)).EqualTo(Convert.ToBase64String(responseBody)));
+            Assert.That(responseNode.Children[new YamlScalarNode("Body")], Is.TypeOf<YamlScalarNode>().And.Property(nameof(YamlScalarNode.Value)).EqualTo(Convert.ToBase64String(responseBody, Base64FormattingOptions.InsertLineBreaks).Replace("\r\n", "\n")));
 
             var responseHeaders = (YamlSequenceNode) responseNode.Children[new YamlScalarNode("Headers")];
             Assert.That(responseHeaders.Children, Has.Count.EqualTo(1));
