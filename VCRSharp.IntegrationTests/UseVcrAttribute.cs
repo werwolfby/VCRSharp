@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -8,6 +9,7 @@ using NUnit.Framework.Interfaces;
 
 namespace VCRSharp.IntegrationTests
 {
+    [ExcludeFromCodeCoverage]
     public class UseVcrAttribute : NUnitAttribute, ITestAction
     {
         private readonly string _cassetteFolder;
