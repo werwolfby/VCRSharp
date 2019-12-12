@@ -1,4 +1,5 @@
-﻿using System.Collections.Specialized;
+﻿using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
@@ -39,6 +40,12 @@ namespace VCRSharp
                     result.Add(key, value);
                 }
             }
+        }
+
+        private static void Deconstruct<TK, TV>(this KeyValuePair<TK, TV> pair, out TK key, out TV value)
+        {
+            key = pair.Key;
+            value = pair.Value;
         }
     }
 }

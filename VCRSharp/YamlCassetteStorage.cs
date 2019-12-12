@@ -213,8 +213,8 @@ namespace VCRSharp
                     value = null;
                     return false;
                 }
-
-                var constructor = _constructorInfo ?? expectedType.GetConstructors().Single();
+                
+                var constructor = _constructorInfo ?? expectedType.GetTypeInfo().DeclaredConstructors.Single();
                 var parameters = constructor.GetParameters();
                 var expectedParameters = parameters
                     .ToDictionary(
@@ -257,7 +257,7 @@ namespace VCRSharp
             private const string BinaryTag = "!binary";
 
             public bool Accepts(Type type)
-                => typeof(CassetteBody).IsAssignableFrom(type);
+                => typeof(CassetteBody).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
 
             public object ReadYaml(IParser parser, Type type)
             {
@@ -278,7 +278,21 @@ namespace VCRSharp
                         emitter.Emit(new Scalar(null, null, s.Value, ScalarStyle.Literal, true, false));
                         break;
                     case BytesCassetteBody b:
-                        var scalarValue = Convert.ToBase64String(b.Value, Base64FormattingOptions.InsertLineBreaks);
+                        var scalarValue = Convert.ToBase64String(b.Value);
+                        if (scalarValue.Length > 76)
+                        {
+                            var count = scalarValue.Length / (76 + 1) + 1; // To count how many lines of 76 chars we have we should divide on 77 + 1
+                            var lines = new string[count];
+                            for (var i = 0; i < count; i++)
+                            {
+                                var startIndex = i * 76;
+                                var scalarValueRest = scalarValue.Length - startIndex;
+                                lines[i] = scalarValue.Substring(startIndex,  scalarValueRest < 76 ? scalarValueRest : 76);
+                            }
+
+                            scalarValue = string.Join(Environment.NewLine, lines);
+                        }
+
                         emitter.Emit(new Scalar(null, BinaryTag, scalarValue, ScalarStyle.Literal, true, false));
                         break;
                 }

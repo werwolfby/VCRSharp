@@ -99,7 +99,7 @@ namespace VCRSharp
             return Equals((CassetteRecordRequest) obj);
         }
 
-        public override int GetHashCode() => HashCode.Combine(Method, Uri);
+        public override int GetHashCode() => Method.GetHashCode() * 17 + Uri.GetHashCode();
 
         public static bool operator ==(CassetteRecordRequest? left, CassetteRecordRequest? right) => Equals(left, right);
 
