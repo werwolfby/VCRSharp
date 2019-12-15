@@ -196,10 +196,45 @@ namespace VCRSharp.Tests
             
             Assert.That(argumentException.ParamName, Is.Null);
         }
-        
+
+        [Test]
+        public async Task SendAsync_WithCookieContainerWithCookieInRecord_CookiesAddedToContainer()
+        {
+            var cassette = new Cassette();
+            var record = new CassetteRecord(
+                new CassetteRecordRequest(
+                    HttpMethod.Get.Method,
+                    new Uri("http://localhost:8080/test"),
+                    new NameValueCollection()),
+                new CassetteRecordResponse(
+                    new Version(1, 1),
+                    200,
+                    "OK",
+                    new NameValueCollection
+                    {
+                        {"Set-Cookie", "value=123; path=/"},
+                    },
+                    @"{""a"": 1, ""b"": 2}"));
+            cassette.Add(record);
+            
+            var cookieContainer = new CookieContainer();
+            var replayingHttpMessageHandler = new PublicReplayingHttpMessageHandler(cassette, cookieContainer);
+
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                Version = new Version(1, 1),
+                RequestUri = new Uri("http://localhost:8080/test"),
+                Content = null,
+            };
+            await replayingHttpMessageHandler.SendAsync(request, CancellationToken.None);
+            
+            Assert.That(cookieContainer.GetCookies(request.RequestUri)["value"]?.Value, Is.EqualTo("123"));
+        }
+
         private class PublicReplayingHttpMessageHandler : ReplayingHttpMessageHandler
         {
-            public PublicReplayingHttpMessageHandler(Cassette cassette) : base(cassette)
+            public PublicReplayingHttpMessageHandler(Cassette cassette, CookieContainer cookieContainer = null) : base(cassette, cookieContainer)
             {
             }
             

@@ -10,11 +10,13 @@ namespace VCRSharp
     public class ReplayingHttpMessageHandler : HttpMessageHandler
     {
         private readonly Cassette _cassette;
+        private readonly CookieContainer? _cookieContainer;
         private readonly IEqualityComparer<CassetteRecordRequest>? _comparer;
 
-        public ReplayingHttpMessageHandler(Cassette cassette, IEqualityComparer<CassetteRecordRequest>? comparer = null)
+        public ReplayingHttpMessageHandler(Cassette cassette, CookieContainer? cookieContainer = null, IEqualityComparer<CassetteRecordRequest>? comparer = null)
         {
             _cassette = cassette;
+            _cookieContainer = cookieContainer;
             _comparer = comparer;
         }
         
@@ -35,6 +37,11 @@ namespace VCRSharp
             
             // If there are no changes in request stored in cassette, then use original request
             response.RequestMessage ??= request;
+
+            if (_cookieContainer != null)
+            {
+                CookieHelper.ProcessReceivedCookies(response, _cookieContainer);
+            }
 
             // Simulate async processing
             await Task.Yield();

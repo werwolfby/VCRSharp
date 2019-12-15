@@ -79,7 +79,7 @@ namespace VCRSharp.Tests
         
         private class PublicTryReplayHttpMessageHandler : TryReplayHttpMessageHandler
         {
-            public PublicTryReplayHttpMessageHandler(Cassette cassette, HttpMessageHandler innerHandler, IEqualityComparer<CassetteRecordRequest> comparer = null) : base(cassette, innerHandler, comparer)
+            public PublicTryReplayHttpMessageHandler(Cassette cassette, HttpMessageHandler innerHandler, CookieContainer cookieContainer = null, IEqualityComparer<CassetteRecordRequest> comparer = null) : base(cassette, innerHandler, cookieContainer, comparer)
             {
             }
 

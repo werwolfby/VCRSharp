@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,9 +12,9 @@ namespace VCRSharp
         private readonly ReplayingHttpMessageHandler _replayingHttpMessageHandler;
         private readonly RecordingHttpMessageHandler _recordingHttpMessageHandler;
 
-        public TryReplayHttpMessageHandler(Cassette cassette, HttpMessageHandler innerHandler, IEqualityComparer<CassetteRecordRequest>? comparer = null)
+        public TryReplayHttpMessageHandler(Cassette cassette, HttpMessageHandler innerHandler, CookieContainer? cookieContainer = null, IEqualityComparer<CassetteRecordRequest>? comparer = null)
         {
-            _replayingHttpMessageHandler = new ReplayingHttpMessageHandler(cassette, comparer);
+            _replayingHttpMessageHandler = new ReplayingHttpMessageHandler(cassette, cookieContainer, comparer);
             _recordingHttpMessageHandler = new RecordingHttpMessageHandler(innerHandler, cassette);
         }
 
