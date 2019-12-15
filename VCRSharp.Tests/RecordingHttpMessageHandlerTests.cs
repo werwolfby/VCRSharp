@@ -234,7 +234,12 @@ namespace VCRSharp.Tests
             cookieContainer.Add(baseUri, new Cookie("value", "123"));
             
             var cassette = new Cassette();
-            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StringContent("{}", Encoding.UTF8, "application/json")), cassette, cookieContainer);
+            var handler = new PublicRecordingHttpMessageHandler(
+                new MockHttpRequestHandler(new StringContent("{}", Encoding.UTF8, "application/json"))
+                {
+                    CookieContainer = cookieContainer
+                },
+                cassette);
 
             HttpRequestMessage request = new HttpRequestMessage
             {
@@ -249,7 +254,7 @@ namespace VCRSharp.Tests
         
         private class PublicRecordingHttpMessageHandler : RecordingHttpMessageHandler
         {
-            public PublicRecordingHttpMessageHandler(HttpMessageHandler innerHandler, Cassette cassette, CookieContainer cookieContainer = null) : base(innerHandler, cassette, cookieContainer)
+            public PublicRecordingHttpMessageHandler(HttpMessageHandler innerHandler, Cassette cassette) : base(innerHandler, cassette)
             {
             }
             
@@ -259,11 +264,13 @@ namespace VCRSharp.Tests
         private class MockHttpRequestHandler : HttpMessageHandler
         {
             private readonly HttpContent _content;
-
+            
             public MockHttpRequestHandler(HttpContent content)
             {
                 _content = content;
             }
+            
+            public CookieContainer CookieContainer { get; set; }
 
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {

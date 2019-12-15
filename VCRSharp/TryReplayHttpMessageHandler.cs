@@ -15,7 +15,7 @@ namespace VCRSharp
         public TryReplayHttpMessageHandler(Cassette cassette, HttpMessageHandler innerHandler, CookieContainer? cookieContainer = null, IEqualityComparer<CassetteRecordRequest>? comparer = null)
         {
             _replayingHttpMessageHandler = new ReplayingHttpMessageHandler(cassette, cookieContainer, comparer);
-            _recordingHttpMessageHandler = new RecordingHttpMessageHandler(innerHandler, cassette, cookieContainer);
+            _recordingHttpMessageHandler = new RecordingHttpMessageHandler(innerHandler, cassette);
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

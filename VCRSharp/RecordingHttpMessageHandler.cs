@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,10 +12,15 @@ namespace VCRSharp
         private readonly Cassette _cassette;
         private readonly CookieContainer? _cookieContainer;
 
-        public RecordingHttpMessageHandler(HttpMessageHandler innerHandler, Cassette cassette, CookieContainer? cookieContainer = null) : base(innerHandler)
+        public RecordingHttpMessageHandler(HttpMessageHandler innerHandler, Cassette cassette) : base(innerHandler)
         {
+            var cookieContainerProperty = innerHandler.GetType().GetRuntimeProperty(nameof(HttpClientHandler.CookieContainer));
+            if (cookieContainerProperty?.PropertyType == typeof(CookieContainer))
+            {
+                _cookieContainer = (CookieContainer?) cookieContainerProperty.GetValue(innerHandler);
+            }
+            
             _cassette = cassette;
-            _cookieContainer = cookieContainer;
         }
         
         internal Task<HttpResponseMessage> SendAsyncInternal(HttpRequestMessage request, CancellationToken cancellationToken) => SendAsync(request, cancellationToken);
