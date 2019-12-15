@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -12,7 +13,7 @@ namespace VCRSharp.IntegrationTests
 
         public Cassette Cassette { get; set; }
         
-        public HttpMessageHandler HttpMessageHandler { get; set; }
+        public Func<CookieContainer, HttpMessageHandler> HttpMessageHandlerFunc { get; set; }
 
         [Test]
         public async Task GetUsersApi_InvokedOnFirstCallFromCassetteOnSecondCall_Success()
@@ -76,7 +77,7 @@ namespace VCRSharp.IntegrationTests
         {
             using var _ = TestServerHelper.BuildAndStartHost(Cassette);
 
-            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            using var httpClient = new HttpClient(HttpMessageHandlerFunc(null)) {BaseAddress = _baseAddress};
             var user = await httpClient.GetStringAsync("/api/users/1");
 
             var actual = JObject.Parse(user);
@@ -91,7 +92,7 @@ namespace VCRSharp.IntegrationTests
         {
             using var _ = TestServerHelper.BuildAndStartHost(Cassette);
 
-            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            using var httpClient = new HttpClient(HttpMessageHandlerFunc(null)) {BaseAddress = _baseAddress};
             var user4 = await httpClient.GetStringAsync("/api/users/4");
             var user5 = await httpClient.GetStringAsync("/api/users/5");
 
@@ -112,7 +113,7 @@ namespace VCRSharp.IntegrationTests
         {
             using var _ = TestServerHelper.BuildAndStartHost(Cassette);
 
-            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            using var httpClient = new HttpClient(HttpMessageHandlerFunc(null)) {BaseAddress = _baseAddress};
             var user = await httpClient.GetStringAsync("/api/get_users/3");
 
             var actual = JObject.Parse(user);

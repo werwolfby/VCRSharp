@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using NUnit.Framework;
@@ -35,7 +36,7 @@ namespace VCRSharp.IntegrationTests
             var withVcr = GetWithVcr(test);
 
             withVcr.Cassette = null;
-            withVcr.HttpMessageHandler = null;
+            withVcr.HttpMessageHandlerFunc = null;
         }
 
         protected virtual IWithVcr GetWithVcr(ITest test)
@@ -54,8 +55,8 @@ namespace VCRSharp.IntegrationTests
             return (IWithVcr)parent.Fixture;
         }
 
-        protected virtual TryReplayHttpMessageHandler CreateHttpMessageHandler(Cassette cassette)
-            => new TryReplayHttpMessageHandler(cassette, new SocketsHttpHandler());
+        protected virtual Func<CookieContainer, TryReplayHttpMessageHandler> CreateHttpMessageHandler(Cassette cassette)
+            => cc => new TryReplayHttpMessageHandler(cassette, new SocketsHttpHandler {CookieContainer = cc}, cc);
 
         protected virtual void BeforeTest(ITest test, YamlCassetteStorage cassetteStorage, string cassettePath)
         {
@@ -65,7 +66,7 @@ namespace VCRSharp.IntegrationTests
             var withVcr = GetWithVcr(test);
 
             withVcr.Cassette = cassette;
-            withVcr.HttpMessageHandler = httpMessageHandler;
+            withVcr.HttpMessageHandlerFunc = httpMessageHandler;
         }
 
         protected virtual void AfterTest(ITest test, YamlCassetteStorage cassetteStorage, string cassettePath)
