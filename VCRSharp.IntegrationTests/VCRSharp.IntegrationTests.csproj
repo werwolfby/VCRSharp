@@ -21,7 +21,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <None Include="cassette/*.yml" CopyToOutputDirectory="Always" />
+        <None Include="cassette/*.cassette" CopyToOutputDirectory="Always" />
     </ItemGroup>
 
     <ItemGroup>
