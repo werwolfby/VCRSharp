@@ -19,7 +19,7 @@ namespace VCRSharp.IntegrationTests
         
         [Test]
         [UseVcr("cassette")]
-        public async Task LoginAndInfo_AnyUser_Success()
+        public async Task LoginAndInfo_AnyUserWithCookieContainer_Success()
         {
             using var _ = TestServerHelper.BuildAndStartHost(Cassette);
             
@@ -43,6 +43,37 @@ namespace VCRSharp.IntegrationTests
             response = await httpClient.GetAsync("/api/users/me/info");
             
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        }
+        
+        [Test]
+        [UseVcr("cassette")]
+        public async Task LoginAndInfo_AnyUserWithoutCookies_UnauthorizedOnMeInfo()
+        {
+            using var _ = TestServerHelper.BuildAndStartHost(Cassette);
+
+            var cookieContainer = new CookieContainer();
+            using var httpClient = new HttpClient(HttpMessageHandlerFunc(cookieContainer))
+            {
+                BaseAddress = _baseAddress,
+            };
+            var query = QueryHelpers.AddQueryString("/api/users/login", new Dictionary<string, string>
+            {
+                {"username", "admin"},
+                {"password", "password"},
+            });
+            var response = await httpClient.GetAsync(query);
+            
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var cookies = cookieContainer.GetCookies(_baseAddress);
+            foreach (Cookie cookie in cookies)
+            {
+                cookie.Expired = true;
+            }
+            
+            response = await httpClient.GetAsync("/api/users/me/info");
+            
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
         }
     }
 }

@@ -1,0 +1,30 @@
+﻿Request:
+  Method: GET
+  Uri: http://localhost:5000/api/users/login?username=admin&password=password
+  Headers:
+  - Host: localhost
+Response:
+  Version: 1.1
+  StatusCode: 200
+  StatusMessage: OK
+  Headers:
+  - Date: Sun, 15 Dec 2019 09:11:22 GMT
+  - Server: Kestrel
+  - Set-Cookie: value=123; path=/
+  - Content-Length: 0
+  Body: ""
+---
+Request:
+  Method: GET
+  Uri: http://localhost:5000/api/users/me/info
+  Headers:
+  - Host: localhost
+Response:
+  Version: 1.1
+  StatusCode: 401
+  StatusMessage: Unauthorized
+  Headers:
+  - Date: Sun, 15 Dec 2019 09:11:22 GMT
+  - Server: Kestrel
+  - Content-Length: 0
+  Body: ""
