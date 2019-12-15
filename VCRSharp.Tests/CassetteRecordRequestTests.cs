@@ -145,7 +145,7 @@ namespace VCRSharp.Tests
         {
             var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://localhost:5000/api/users/1"));
 
-            var record = await CassetteRecordRequest.CreateFromRequest(request);
+            var record = await CassetteRecordRequest.CreateFromRequest(request, null);
             
             Assert.That(record.Method, Is.EqualTo(request.Method.Method));
             Assert.That(record.Uri, Is.EqualTo(request.RequestUri));
@@ -164,7 +164,7 @@ namespace VCRSharp.Tests
                 Content = new StringContent("text", Encoding.UTF8, "text/plain")
             };
 
-            var record = await CassetteRecordRequest.CreateFromRequest(request);
+            var record = await CassetteRecordRequest.CreateFromRequest(request, null);
             
             Assert.That(record.Method, Is.EqualTo(request.Method.Method));
             Assert.That(record.Uri, Is.EqualTo(request.RequestUri));
@@ -193,7 +193,7 @@ namespace VCRSharp.Tests
                 }
             };
 
-            var record = await CassetteRecordRequest.CreateFromRequest(request);
+            var record = await CassetteRecordRequest.CreateFromRequest(request, null);
             
             Assert.That(record.Method, Is.EqualTo(request.Method.Method));
             Assert.That(record.Uri, Is.EqualTo(request.RequestUri));
@@ -216,7 +216,7 @@ namespace VCRSharp.Tests
                 }
             };
 
-            var record = await CassetteRecordRequest.CreateFromRequest(request);
+            var record = await CassetteRecordRequest.CreateFromRequest(request, null);
             
             Assert.That(record.Method, Is.EqualTo(request.Method.Method));
             Assert.That(record.Uri, Is.EqualTo(request.RequestUri));

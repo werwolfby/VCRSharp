@@ -225,10 +225,31 @@ namespace VCRSharp.Tests
             Assert.That(cassette.Records[0].Response.Headers["Content-Type"], Contains.Substring("application/json").And.Contains("charset=utf-8"));
             Assert.That(cassette.Records[0].Response.Body, Is.EqualTo(new BytesCassetteBody(Encoding.UTF8.GetBytes(body))));
         }
+
+        [Test]
+        public async Task SendAsync_WithCookieContainer_ShouldBeRecorderInRequest()
+        {
+            var baseUri = new Uri("http://localhost:8080");
+            var cookieContainer = new CookieContainer();
+            cookieContainer.Add(baseUri, new Cookie("value", "123"));
+            
+            var cassette = new Cassette();
+            var handler = new PublicRecordingHttpMessageHandler(new MockHttpRequestHandler(new StringContent("{}", Encoding.UTF8, "application/json")), cassette, cookieContainer);
+
+            HttpRequestMessage request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri(baseUri, "/api/data"),
+            };
+            await handler.SendAsync(request, CancellationToken.None);
+            
+            Assert.That(cassette.Records, Has.Count.EqualTo(1));
+            Assert.That(cassette.Records[0].Request.Headers["Cookie"], Is.EqualTo(cookieContainer.GetCookieHeader(baseUri)));
+        }
         
         private class PublicRecordingHttpMessageHandler : RecordingHttpMessageHandler
         {
-            public PublicRecordingHttpMessageHandler(HttpMessageHandler innerHandler, Cassette cassette) : base(innerHandler, cassette)
+            public PublicRecordingHttpMessageHandler(HttpMessageHandler innerHandler, Cassette cassette, CookieContainer cookieContainer = null) : base(innerHandler, cassette, cookieContainer)
             {
             }
             

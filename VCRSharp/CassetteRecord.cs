@@ -105,7 +105,7 @@ namespace VCRSharp
 
         public static bool operator !=(CassetteRecordRequest? left, CassetteRecordRequest? right) => !Equals(left, right);
 
-        public static async Task<CassetteRecordRequest> CreateFromRequest(HttpRequestMessage request)
+        public static async Task<CassetteRecordRequest> CreateFromRequest(HttpRequestMessage request, CookieContainer? cookieContainer)
         {
             var record = new CassetteRecordRequest(request.Method.Method, request.RequestUri,
                 request.ToNameValueCollection());
@@ -114,6 +114,11 @@ namespace VCRSharp
             if (record.Headers["Host"] == null)
             {
                 record.Headers.Add("Host", request.RequestUri.IdnHost);
+            }
+
+            if (cookieContainer?.GetCookieHeader(request.RequestUri) is { } cookieHeader && !string.IsNullOrWhiteSpace(cookieHeader))
+            {
+                record.Headers.Add("Cookie", cookieHeader);
             }
 
             var (body, newContent) = await CassetteBody.CreateCassetteBody(request.Content);
@@ -180,18 +185,18 @@ namespace VCRSharp
             return response;
         }
 
-        public static async Task<CassetteRecordResponse> CreateFromResponse(HttpResponseMessage response, CassetteRecordRequest recordRequest)
+        public static async Task<CassetteRecordResponse> CreateFromResponse(HttpResponseMessage response, CassetteRecordRequest request, CookieContainer? cookieContainer)
         {
             var record = new CassetteRecordResponse(response.Version, (int) response.StatusCode, response.ReasonPhrase, response.ToNameValueCollection())
             {
-                Request = await CassetteRecordRequest.CreateFromRequest(response.RequestMessage)
+                Request = await CassetteRecordRequest.CreateFromRequest(response.RequestMessage, cookieContainer)
             };
 
             // In case of Redirect inner innerHandler can create a new request, that actually did redirect
             // External users can expect this RequestMessage for check redirecting URI for example
             // innerHandler can change request, so we should create a new CassetteRecordRequest
             // from response and compare it with the original value 
-            if (record.Request == recordRequest)
+            if (record.Request == request)
             {
                 record.Request = null;
             }

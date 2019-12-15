@@ -198,7 +198,7 @@ namespace VCRSharp.Tests
         }
 
         [Test]
-        public async Task SendAsync_WithCookieContainerWithCookieInRecord_CookiesAddedToContainer()
+        public async Task SendAsync_WithCookieContainerWithCookieInResponse_CookiesAddedToContainer()
         {
             var cassette = new Cassette();
             var record = new CassetteRecord(

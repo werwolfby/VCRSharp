@@ -24,7 +24,7 @@ namespace VCRSharp
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var newRecord = await CassetteRecordRequest.CreateFromRequest(request);
+            var newRecord = await CassetteRecordRequest.CreateFromRequest(request, _cookieContainer);
 
             var record = _cassette.Find(newRecord, _comparer);
             if (record == null)
