@@ -1,5 +1,7 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace VCRSharp.TestServer.Controllers
@@ -26,6 +28,29 @@ namespace VCRSharp.TestServer.Controllers
             await Task.Yield();
 
             return RedirectToRoute("/api/users/get", new {id = id});
+        }
+
+        [Route("login")]
+        public async Task<ActionResult> Login(string username, string password)
+        {
+            await Task.Yield();
+            
+            Response.Cookies.Append("value", "123");
+
+            return Ok();
+        }
+
+        [Route("me/info")]
+        public async Task<ActionResult> UserInfo()
+        {
+            await Task.Yield();
+
+            if (Request.Cookies["value"] != "123")
+            {
+                return StatusCode(401);
+            }
+
+            return Ok(new {Info = "Secret Info"});
         }
         
         public class UserDto

@@ -1,4 +1,6 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net;
+using System.Net.Http;
 
 namespace VCRSharp.IntegrationTests
 {
@@ -6,6 +8,6 @@ namespace VCRSharp.IntegrationTests
     {
         Cassette Cassette { get; set; }
         
-        HttpMessageHandler HttpMessageHandler { get; set; }
+        Func<CookieContainer, HttpMessageHandler> HttpMessageHandlerFunc { get; set; }
     }
 }

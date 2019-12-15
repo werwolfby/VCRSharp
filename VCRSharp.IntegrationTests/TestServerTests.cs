@@ -1,12 +1,9 @@
 ﻿using System;
-using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using VCRSharp.TestServer;
 
 namespace VCRSharp.IntegrationTests
 {
@@ -16,12 +13,12 @@ namespace VCRSharp.IntegrationTests
 
         public Cassette Cassette { get; set; }
         
-        public HttpMessageHandler HttpMessageHandler { get; set; }
+        public Func<CookieContainer, HttpMessageHandler> HttpMessageHandlerFunc { get; set; }
 
         [Test]
         public async Task GetUsersApi_InvokedOnFirstCallFromCassetteOnSecondCall_Success()
         {
-            using var _ = BuildAndStartHost();
+            using var _ = TestServerHelper.BuildAndStartHost();
 
             var httpClientHandler = new SocketsHttpHandler();
             var innerHandler = new StubHttpRequestHandler(httpClientHandler);
@@ -48,7 +45,7 @@ namespace VCRSharp.IntegrationTests
         [Test]
         public async Task GetRedirectUsersApi_InvokedOnFirstCallFromCassetteOnSecondCall_Success()
         {
-            using var _ = BuildAndStartHost();
+            using var _ = TestServerHelper.BuildAndStartHost();
 
             var httpClientHandler = new SocketsHttpHandler();
             var innerHandler = new StubHttpRequestHandler(httpClientHandler);
@@ -78,9 +75,9 @@ namespace VCRSharp.IntegrationTests
         [UseVcr("cassette")]
         public async Task Load_GetUser_SuccessReadFromFile()
         {
-            using var _ = Cassette.Records.Count == 0 ? BuildAndStartHost() : null;
+            using var _ = TestServerHelper.BuildAndStartHost(Cassette);
 
-            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            using var httpClient = new HttpClient(HttpMessageHandlerFunc(null)) {BaseAddress = _baseAddress};
             var user = await httpClient.GetStringAsync("/api/users/1");
 
             var actual = JObject.Parse(user);
@@ -93,9 +90,9 @@ namespace VCRSharp.IntegrationTests
         [UseVcr("cassette")]
         public async Task LoadMultiple_GetUser_SuccessReadFromFile()
         {
-            using var _ = Cassette.Records.Count == 0 ? BuildAndStartHost() : null;
+            using var _ = TestServerHelper.BuildAndStartHost(Cassette);
 
-            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            using var httpClient = new HttpClient(HttpMessageHandlerFunc(null)) {BaseAddress = _baseAddress};
             var user4 = await httpClient.GetStringAsync("/api/users/4");
             var user5 = await httpClient.GetStringAsync("/api/users/5");
 
@@ -114,33 +111,15 @@ namespace VCRSharp.IntegrationTests
         [UseVcr("cassette")]
         public async Task Load_GetUserRedirect_SuccessReadFromFile()
         {
-            using var _ = Cassette.Records.Count == 0 ? BuildAndStartHost() : null;
+            using var _ = TestServerHelper.BuildAndStartHost(Cassette);
 
-            using var httpClient = new HttpClient(HttpMessageHandler) {BaseAddress = _baseAddress};
+            using var httpClient = new HttpClient(HttpMessageHandlerFunc(null)) {BaseAddress = _baseAddress};
             var user = await httpClient.GetStringAsync("/api/get_users/3");
 
             var actual = JObject.Parse(user);
             var expected = JObject.Parse("{\"id\": 3, \"name\": \"User 3\"}");
 
             Assert.That(actual, Is.EqualTo(expected));
-        }
-
-        private static IHost BuildAndStartHost()
-        {
-            var host = Host.CreateDefaultBuilder()
-                .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); })
-                .ConfigureWebHost(builder =>
-                {
-                    builder.ConfigureKestrel(serverOptions =>
-                    {
-                        serverOptions.ConfigureEndpointDefaults(listenOptions => { });
-                    });
-                })
-                .Build();
-            
-            host.Start();
-
-            return host;
         }
     }
 }
