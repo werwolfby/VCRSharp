@@ -8,12 +8,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCRSharp.IntegrationTests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCRSharp.TestServer", "VCRSharp.TestServer\VCRSharp.TestServer.csproj", "{7507B04C-0F7C-4774-A375-E50F001515BD}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = ".build", "build\.build.csproj", "{139169B9-6667-4FDA-9392-2EEFA0EF415F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{139169B9-6667-4FDA-9392-2EEFA0EF415F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{139169B9-6667-4FDA-9392-2EEFA0EF415F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69EA9BCE-3CE9-437B-AC4C-689CABAB082E}.Release|Any CPU.ActiveCfg = Release|Any CPU
