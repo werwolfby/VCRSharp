@@ -8,6 +8,7 @@ using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.Coverlet;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.ReportGenerator;
 using Nuke.Common.Utilities.Collections;
@@ -85,8 +86,13 @@ class Build : NukeBuild
         {
             var outputs = DotNetTest(s => s
                 .SetProjectFile(UnitTestsProject.Path)
-                .SetDataCollector("XPlat Code Coverage"));
-            CoverageReports.Add(GetAttachment(outputs));
+                .SetNoBuild(InvokedTargets.Contains(Compile))
+                .When(InvokedTargets.Contains(Coverage), _ => _
+                    .SetDataCollector("XPlat Code Coverage")));
+            if (InvokedTargets.Contains(Coverage))
+            {
+                CoverageReports.Add(GetAttachment(outputs));
+            }
         });
 
     Target IntegrationTests => _ => _
@@ -98,7 +104,7 @@ class Build : NukeBuild
                 .SetProjectFile(IntegrationTestsProject.Path));
         });
 
-    Target CoverageReport => _ => _
+    Target Coverage => _ => _
         .After(UnitTests)
         .After(IntegrationTests)
         .Executes(() =>
