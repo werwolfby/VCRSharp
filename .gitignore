@@ -355,3 +355,4 @@ MigrationBackup/
 .idea
 
 # End of https://www.gitignore.io/api/csharp
+/Reports/
