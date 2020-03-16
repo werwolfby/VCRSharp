@@ -10,6 +10,7 @@ using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
+using static Nuke.Common.Tools.NUnit.NUnitTasks;
 
 [CheckBuildProjectConfigurations]
 [UnsetVisualStudioEnvironmentVariables]
@@ -27,6 +28,8 @@ class Build : NukeBuild
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
     [Solution] readonly Solution Solution;
+    Project UnitTestsProject => Solution.GetProject("VCRSharp.Tests");
+    Project IntegrationTestsProject => Solution.GetProject("VCRSharp.IntegrationTests");
 
     Target Clean => _ => _
         .Before(Restore)
@@ -55,4 +58,24 @@ class Build : NukeBuild
                 .SetNoRestore(true));
         });
 
+    Target Tests => _ => _
+        .Triggers(UnitTests)
+        .Triggers(IntegrationTests);
+
+    Target UnitTests => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            DotNetTest(s => s
+                .SetProjectFile(UnitTestsProject.Path));
+        });
+
+    Target IntegrationTests => _ => _
+        .After(UnitTests)
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            DotNetTest(s => s
+                .SetProjectFile(IntegrationTestsProject.Path));
+        });
 }
