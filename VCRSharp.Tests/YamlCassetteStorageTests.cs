@@ -447,9 +447,9 @@ namespace VCRSharp.Tests
             sr.Serialize(stringWriter, new Dictionary<string, object> {{"generic", bytes}});
             
             var binary =
-                "generic: !binary |-\r\n" +
-                "  AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4\r\n" +
-                "  OTo7PD0+P0BBQkNERUZHSElKS0xNTk8=\r\n";
+                "generic: !binary |-" + Environment.NewLine +
+                "  AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4" + Environment.NewLine +
+                "  OTo7PD0+P0BBQkNERUZHSElKS0xNTk8=" + Environment.NewLine;
             Assert.That(stringWriter.GetStringBuilder().ToString(), Is.EqualTo(binary));
         }
         
